@@ -1,7 +1,7 @@
 # src/graph-query/getCollections.graphql
 
-query GetCollections($first: Int!) {
-    collections(first: $first) {
+query GetCollections($txCreation: String!) {
+    collections(where: {txCreation: $txCreation}) {
       id
       owner
       txCreation

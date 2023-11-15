@@ -13,8 +13,8 @@ export class GraphQlcallerController {
   }
 
   @Get('collection')
-  findAllCollection(@Query('first') first: number) {
-    return this.graphQlcallerService.getCollections(1);
+  findAllCollection(@Query('first') first: string) {
+    return this.graphQlcallerService.getCollections(first);
   }
 
   @Get(':id')

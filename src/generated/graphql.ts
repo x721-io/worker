@@ -3971,8 +3971,8 @@ export type DirectiveResolvers<ContextType = any> = {
 
 
 export const GetCollectionsDocument = gql`
-    query GetCollections($first: Int!) {
-  collections(first: $first) {
+    query GetCollections($txCreation: String!) {
+  collections(where: {txCreation: $txCreation}) {
     id
     owner
     txCreation
@@ -3996,7 +3996,7 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
 }
 export type Sdk = ReturnType<typeof getSdk>;
 export type GetCollectionsQueryVariables = Exact<{
-  first: Scalars['Int']['input'];
+  txCreation: Scalars['String']['input'];
 }>;
 
 

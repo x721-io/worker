@@ -6,16 +6,15 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { WebhookModule } from './modules/webhook/webhook.module';
 import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './modules/common/common.module';
-import { AuthModule } from './modules/auth/auth.module';
-import { UserModule } from './modules/user/user.module';
 import { GraphQlcallerModule } from './modules/graph-qlcaller/graph-qlcaller.module';
 import { JobQueueModule } from './modules/job-queue/job-queue.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      ignoreEnvFile: true,
-    }),
+    // ConfigModule.forRoot({
+    //   ignoreEnvFile: true,
+    // }),
+    ConfigModule.forRoot({ isGlobal: true }),
     ThrottlerModule.forRoot({
       ttl: 60,
       limit: 80,
@@ -24,8 +23,6 @@ import { JobQueueModule } from './modules/job-queue/job-queue.module';
     ApiCallerModule,
     WebhookModule,
     CommonModule,
-    AuthModule,
-    UserModule,
     GraphQlcallerModule,
     JobQueueModule,
   ],

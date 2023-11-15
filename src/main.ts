@@ -1,6 +1,5 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { Redis } from './database';
 import * as compression from 'compression';
 import * as session from 'express-session';
 import * as cookieParser from 'cookie-parser';
@@ -35,8 +34,6 @@ async function bootstrap() {
     credentials: true,
   });
   app.use(compression());
-  const redisConnectFn = Redis.getClient();
-  await redisConnectFn;
-  await app.listen(8888);
+  await app.listen(7777);
 }
 bootstrap();

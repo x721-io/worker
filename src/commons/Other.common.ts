@@ -3,7 +3,6 @@ import GCPPCommonCommon from './GCPPCommon.common';
 import { FileUpload } from './types/Fileupload.common';
 import { encode } from 'punycode';
 import { ApiCallerService } from 'src/modules/api-caller/api-caller.service';
-import SecureCommon from './Secure.common';
 import { HttpService } from '@nestjs/axios';
 import logger from './Logger.common';
 

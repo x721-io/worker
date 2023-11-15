@@ -10,10 +10,10 @@ export class GraphQlcallerService {
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
-  async getCollections(first: number) {
+  async getCollections(hash: string) {
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    const variables: GetCollectionsQueryVariables = { first };
+    const variables: GetCollectionsQueryVariables = { txCreation: hash };
     try {
       const response = await sdk.GetCollections(variables);
       return response;
