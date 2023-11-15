@@ -1,0 +1,33 @@
+version: '3'
+services:
+  ext-server:
+    container_name: u2u-server
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - '8888:8888'
+      - '5555:5555'
+    volumes:
+      - ../logs/u2u-marketplace-api:/usr/src/app/u2u-server/logs
+    networks:
+      - u2u-nw
+    # logging:
+    #   driver: gcplogs
+    #   options:
+    #     gcp-project: web-team-380004
+  redis:
+    image: redis
+    command: >
+      --requirepass u2umarketplace
+    networks:
+      - u2u-nw
+    volumes:
+      - redis-data:/data
+networks:
+  u2u-nw:
+    external: false
+    name: u2u-nw
+volumes:
+  redis-data:
