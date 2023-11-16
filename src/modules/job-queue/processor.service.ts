@@ -4,25 +4,50 @@ import { GraphQLClient } from 'graphql-request';
 import { GetCollectionsQueryVariables, getSdk } from 'src/generated/graphql';
 import { QueueService } from './queue.service';
 import { PrismaService } from 'src/prisma/prisma.service';
+import { TX_STATUS } from '@prisma/client';
 
 @Injectable()
 export class CollectionsCheckProcessor {
   private readonly endpoint = process.env.SUBGRAPH_URL;
-  private readonly maxRetries = 3;
+  private readonly maxRetries = 5;
 
   constructor(private queueService: QueueService, private readonly prisma: PrismaService) {
     this.queueService.getQueue().process('collection', async (job: Job<{ txCreation: string }>, done) => {
       try {
-        console.log(typeof job.data)
-        const collectionData = await this.checkCollectionStatus(JSON.parse(job.data).txCreation);
+        const hash = JSON.parse(job.data).txCreation
+        const collectionData = await this.checkCollectionStatus(hash);
         if (collectionData && collectionData.collections.length > 0) {
           // Process collection data here
           done();
         } else if (job.attempts.made < this.maxRetries) {
           // If not found, retry after a delay
+          await this.prisma.collection.update({
+            where: {
+              txCreationHash: hash
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            }
+          })
           return done(new Error('Collection data not found'));
         } else {
           // Exceeded maximum retries
+          await this.prisma.collection.update({
+            where: {
+              txCreationHash: hash
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            }
+          })
+          await this.prisma.collection.update({
+            where: {
+              txCreationHash: hash
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            }
+          })
           done(new Error('Exceeded max retries'));
         }
       } catch (error) {
@@ -47,8 +72,16 @@ export class CollectionsCheckProcessor {
     try {
       const response = await sdk.GetCollections(variables);
       console.log(response);
-      const a = await this.prisma.user.count()
-      console.log('count: ', a);
+      if (response.collections.length > 0) {
+        await this.prisma.collection.update({
+          where: {
+            txCreationHash: hash
+          },
+          data: {
+            status: TX_STATUS.SUCCESS,
+          }
+        })
+      }
       return response;
     } catch (err) {
       console.log(err);
