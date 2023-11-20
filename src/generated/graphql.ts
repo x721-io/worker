@@ -860,6 +860,301 @@ export enum DirectPurchase_OrderBy {
   SellOrderStart = 'sellOrderStart'
 }
 
+export type DirectTransaction = {
+  __typename?: 'DirectTransaction';
+  blockHeight?: Maybe<Scalars['BigInt']['output']>;
+  exchange?: Maybe<Scalars['String']['output']>;
+  from?: Maybe<Scalars['Bytes']['output']>;
+  hash?: Maybe<Scalars['String']['output']>;
+  /**  hash-nftAddress-id  */
+  id: Scalars['ID']['output'];
+  nftAddress?: Maybe<Scalars['Bytes']['output']>;
+  /**  Fee related data  */
+  nftData?: Maybe<Scalars['String']['output']>;
+  nftDataLength?: Maybe<Scalars['BigInt']['output']>;
+  nftId?: Maybe<Scalars['BigInt']['output']>;
+  nftSide?: Maybe<Scalars['String']['output']>;
+  nftTakeValue?: Maybe<Scalars['BigInt']['output']>;
+  /**  Values related to amt  */
+  nftValue?: Maybe<Scalars['BigInt']['output']>;
+  originFee?: Maybe<Scalars['BigInt']['output']>;
+  paymentAmount?: Maybe<Scalars['BigInt']['output']>;
+  paymentData?: Maybe<Scalars['String']['output']>;
+  paymentDataLength?: Maybe<Scalars['BigInt']['output']>;
+  paymentTakeValue?: Maybe<Scalars['BigInt']['output']>;
+  paymentTokenAddress?: Maybe<Scalars['Bytes']['output']>;
+  paymentValue?: Maybe<Scalars['BigInt']['output']>;
+  to?: Maybe<Scalars['Bytes']['output']>;
+  total?: Maybe<Scalars['BigInt']['output']>;
+};
+
+export type DirectTransaction_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<DirectTransaction_Filter>>>;
+  blockHeight?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockHeight_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  exchange?: InputMaybe<Scalars['String']['input']>;
+  exchange_contains?: InputMaybe<Scalars['String']['input']>;
+  exchange_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_ends_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_gt?: InputMaybe<Scalars['String']['input']>;
+  exchange_gte?: InputMaybe<Scalars['String']['input']>;
+  exchange_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  exchange_lt?: InputMaybe<Scalars['String']['input']>;
+  exchange_lte?: InputMaybe<Scalars['String']['input']>;
+  exchange_not?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_contains?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  exchange_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_starts_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  from?: InputMaybe<Scalars['Bytes']['input']>;
+  from_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  from_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  from_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  from_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  from_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  from_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  hash?: InputMaybe<Scalars['String']['input']>;
+  hash_contains?: InputMaybe<Scalars['String']['input']>;
+  hash_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hash_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_gt?: InputMaybe<Scalars['String']['input']>;
+  hash_gte?: InputMaybe<Scalars['String']['input']>;
+  hash_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hash_lt?: InputMaybe<Scalars['String']['input']>;
+  hash_lte?: InputMaybe<Scalars['String']['input']>;
+  hash_not?: InputMaybe<Scalars['String']['input']>;
+  hash_not_contains?: InputMaybe<Scalars['String']['input']>;
+  hash_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hash_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hash_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hash_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hash_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  nftAddress?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  nftAddress_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  nftData?: InputMaybe<Scalars['String']['input']>;
+  nftDataLength?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftDataLength_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftData_contains?: InputMaybe<Scalars['String']['input']>;
+  nftData_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_gt?: InputMaybe<Scalars['String']['input']>;
+  nftData_gte?: InputMaybe<Scalars['String']['input']>;
+  nftData_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftData_lt?: InputMaybe<Scalars['String']['input']>;
+  nftData_lte?: InputMaybe<Scalars['String']['input']>;
+  nftData_not?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_contains?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftData_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftId?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftId_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftSide?: InputMaybe<Scalars['String']['input']>;
+  nftSide_contains?: InputMaybe<Scalars['String']['input']>;
+  nftSide_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_gt?: InputMaybe<Scalars['String']['input']>;
+  nftSide_gte?: InputMaybe<Scalars['String']['input']>;
+  nftSide_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftSide_lt?: InputMaybe<Scalars['String']['input']>;
+  nftSide_lte?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_contains?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftSide_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftTakeValue?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftTakeValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftValue?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<DirectTransaction_Filter>>>;
+  originFee?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  originFee_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_not?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentAmount?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentAmount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentData?: InputMaybe<Scalars['String']['input']>;
+  paymentDataLength?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentDataLength_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentData_contains?: InputMaybe<Scalars['String']['input']>;
+  paymentData_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_ends_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_gt?: InputMaybe<Scalars['String']['input']>;
+  paymentData_gte?: InputMaybe<Scalars['String']['input']>;
+  paymentData_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  paymentData_lt?: InputMaybe<Scalars['String']['input']>;
+  paymentData_lte?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_contains?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  paymentData_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_starts_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentTakeValue?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentTakeValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentTokenAddress?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  paymentTokenAddress_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  paymentValue?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  to?: InputMaybe<Scalars['Bytes']['input']>;
+  to_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  to_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  to_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  to_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  to_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  to_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  total?: InputMaybe<Scalars['BigInt']['input']>;
+  total_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  total_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  total_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  total_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  total_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  total_not?: InputMaybe<Scalars['BigInt']['input']>;
+  total_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export enum DirectTransaction_OrderBy {
+  BlockHeight = 'blockHeight',
+  Exchange = 'exchange',
+  From = 'from',
+  Hash = 'hash',
+  Id = 'id',
+  NftAddress = 'nftAddress',
+  NftData = 'nftData',
+  NftDataLength = 'nftDataLength',
+  NftId = 'nftId',
+  NftSide = 'nftSide',
+  NftTakeValue = 'nftTakeValue',
+  NftValue = 'nftValue',
+  OriginFee = 'originFee',
+  PaymentAmount = 'paymentAmount',
+  PaymentData = 'paymentData',
+  PaymentDataLength = 'paymentDataLength',
+  PaymentTakeValue = 'paymentTakeValue',
+  PaymentTokenAddress = 'paymentTokenAddress',
+  PaymentValue = 'paymentValue',
+  To = 'to',
+  Total = 'total'
+}
+
 export type Erc721Contract = {
   __typename?: 'ERC721Contract';
   asAccount: Account;
@@ -2521,6 +2816,8 @@ export type Query = {
   directAcceptBids: Array<DirectAcceptBid>;
   directPurchase?: Maybe<DirectPurchase>;
   directPurchases: Array<DirectPurchase>;
+  directTransaction?: Maybe<DirectTransaction>;
+  directTransactions: Array<DirectTransaction>;
   erc721Contract?: Maybe<Erc721Contract>;
   erc721Contracts: Array<Erc721Contract>;
   erc721Creator?: Maybe<Erc721Creator>;
@@ -2546,6 +2843,8 @@ export type Query = {
   event?: Maybe<Event>;
   events: Array<Event>;
   transaction?: Maybe<Transaction>;
+  transaction1?: Maybe<Transaction1>;
+  transaction1S: Array<Transaction1>;
   transactions: Array<Transaction>;
 };
 
@@ -2660,6 +2959,24 @@ export type QueryDirectPurchasesArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<DirectPurchase_Filter>;
+};
+
+
+export type QueryDirectTransactionArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryDirectTransactionsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<DirectTransaction_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<DirectTransaction_Filter>;
 };
 
 
@@ -2886,6 +3203,24 @@ export type QueryTransactionArgs = {
 };
 
 
+export type QueryTransaction1Args = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type QueryTransaction1SArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Transaction1_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<Transaction1_Filter>;
+};
+
+
 export type QueryTransactionsArgs = {
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -2912,6 +3247,8 @@ export type Subscription = {
   directAcceptBids: Array<DirectAcceptBid>;
   directPurchase?: Maybe<DirectPurchase>;
   directPurchases: Array<DirectPurchase>;
+  directTransaction?: Maybe<DirectTransaction>;
+  directTransactions: Array<DirectTransaction>;
   erc721Contract?: Maybe<Erc721Contract>;
   erc721Contracts: Array<Erc721Contract>;
   erc721Creator?: Maybe<Erc721Creator>;
@@ -2937,6 +3274,8 @@ export type Subscription = {
   event?: Maybe<Event>;
   events: Array<Event>;
   transaction?: Maybe<Transaction>;
+  transaction1?: Maybe<Transaction1>;
+  transaction1S: Array<Transaction1>;
   transactions: Array<Transaction>;
 };
 
@@ -3051,6 +3390,24 @@ export type SubscriptionDirectPurchasesArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   subgraphError?: _SubgraphErrorPolicy_;
   where?: InputMaybe<DirectPurchase_Filter>;
+};
+
+
+export type SubscriptionDirectTransactionArgs = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionDirectTransactionsArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<DirectTransaction_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<DirectTransaction_Filter>;
 };
 
 
@@ -3277,6 +3634,24 @@ export type SubscriptionTransactionArgs = {
 };
 
 
+export type SubscriptionTransaction1Args = {
+  block?: InputMaybe<Block_Height>;
+  id: Scalars['ID']['input'];
+  subgraphError?: _SubgraphErrorPolicy_;
+};
+
+
+export type SubscriptionTransaction1SArgs = {
+  block?: InputMaybe<Block_Height>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  orderBy?: InputMaybe<Transaction1_OrderBy>;
+  orderDirection?: InputMaybe<OrderDirection>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
+  subgraphError?: _SubgraphErrorPolicy_;
+  where?: InputMaybe<Transaction1_Filter>;
+};
+
+
 export type SubscriptionTransactionsArgs = {
   block?: InputMaybe<Block_Height>;
   first?: InputMaybe<Scalars['Int']['input']>;
@@ -3303,6 +3678,301 @@ export type TransactionEventsArgs = {
   skip?: InputMaybe<Scalars['Int']['input']>;
   where?: InputMaybe<Event_Filter>;
 };
+
+export type Transaction1 = {
+  __typename?: 'Transaction1';
+  blockHeight?: Maybe<Scalars['BigInt']['output']>;
+  exchange?: Maybe<Scalars['String']['output']>;
+  from?: Maybe<Scalars['Bytes']['output']>;
+  hash?: Maybe<Scalars['String']['output']>;
+  /**  hash-nftAddress-id  */
+  id: Scalars['ID']['output'];
+  nftAddress?: Maybe<Scalars['Bytes']['output']>;
+  /**  Fee related data  */
+  nftData?: Maybe<Scalars['String']['output']>;
+  nftDataLength?: Maybe<Scalars['BigInt']['output']>;
+  nftId?: Maybe<Scalars['BigInt']['output']>;
+  nftSide?: Maybe<Scalars['String']['output']>;
+  nftTakeValue?: Maybe<Scalars['BigInt']['output']>;
+  /**  Values related to amt  */
+  nftValue?: Maybe<Scalars['BigInt']['output']>;
+  originFee?: Maybe<Scalars['BigInt']['output']>;
+  paymentAmount?: Maybe<Scalars['BigInt']['output']>;
+  paymentData?: Maybe<Scalars['String']['output']>;
+  paymentDataLength?: Maybe<Scalars['BigInt']['output']>;
+  paymentTakeValue?: Maybe<Scalars['BigInt']['output']>;
+  paymentTokenAddress?: Maybe<Scalars['Bytes']['output']>;
+  paymentValue?: Maybe<Scalars['BigInt']['output']>;
+  to?: Maybe<Scalars['Bytes']['output']>;
+  total?: Maybe<Scalars['BigInt']['output']>;
+};
+
+export type Transaction1_Filter = {
+  /** Filter for the block changed event. */
+  _change_block?: InputMaybe<BlockChangedFilter>;
+  and?: InputMaybe<Array<InputMaybe<Transaction1_Filter>>>;
+  blockHeight?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  blockHeight_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_not?: InputMaybe<Scalars['BigInt']['input']>;
+  blockHeight_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  exchange?: InputMaybe<Scalars['String']['input']>;
+  exchange_contains?: InputMaybe<Scalars['String']['input']>;
+  exchange_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_ends_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_gt?: InputMaybe<Scalars['String']['input']>;
+  exchange_gte?: InputMaybe<Scalars['String']['input']>;
+  exchange_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  exchange_lt?: InputMaybe<Scalars['String']['input']>;
+  exchange_lte?: InputMaybe<Scalars['String']['input']>;
+  exchange_not?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_contains?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  exchange_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  exchange_starts_with?: InputMaybe<Scalars['String']['input']>;
+  exchange_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  from?: InputMaybe<Scalars['Bytes']['input']>;
+  from_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  from_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  from_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  from_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  from_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  from_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  from_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  hash?: InputMaybe<Scalars['String']['input']>;
+  hash_contains?: InputMaybe<Scalars['String']['input']>;
+  hash_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hash_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_gt?: InputMaybe<Scalars['String']['input']>;
+  hash_gte?: InputMaybe<Scalars['String']['input']>;
+  hash_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hash_lt?: InputMaybe<Scalars['String']['input']>;
+  hash_lte?: InputMaybe<Scalars['String']['input']>;
+  hash_not?: InputMaybe<Scalars['String']['input']>;
+  hash_not_contains?: InputMaybe<Scalars['String']['input']>;
+  hash_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  hash_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  hash_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hash_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  hash_starts_with?: InputMaybe<Scalars['String']['input']>;
+  hash_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  id?: InputMaybe<Scalars['ID']['input']>;
+  id_gt?: InputMaybe<Scalars['ID']['input']>;
+  id_gte?: InputMaybe<Scalars['ID']['input']>;
+  id_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  id_lt?: InputMaybe<Scalars['ID']['input']>;
+  id_lte?: InputMaybe<Scalars['ID']['input']>;
+  id_not?: InputMaybe<Scalars['ID']['input']>;
+  id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
+  nftAddress?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  nftAddress_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  nftAddress_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  nftData?: InputMaybe<Scalars['String']['input']>;
+  nftDataLength?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftDataLength_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftDataLength_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftData_contains?: InputMaybe<Scalars['String']['input']>;
+  nftData_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_gt?: InputMaybe<Scalars['String']['input']>;
+  nftData_gte?: InputMaybe<Scalars['String']['input']>;
+  nftData_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftData_lt?: InputMaybe<Scalars['String']['input']>;
+  nftData_lte?: InputMaybe<Scalars['String']['input']>;
+  nftData_not?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_contains?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftData_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftData_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftData_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftId?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftId_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftId_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftSide?: InputMaybe<Scalars['String']['input']>;
+  nftSide_contains?: InputMaybe<Scalars['String']['input']>;
+  nftSide_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_gt?: InputMaybe<Scalars['String']['input']>;
+  nftSide_gte?: InputMaybe<Scalars['String']['input']>;
+  nftSide_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftSide_lt?: InputMaybe<Scalars['String']['input']>;
+  nftSide_lte?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_contains?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  nftSide_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftSide_starts_with?: InputMaybe<Scalars['String']['input']>;
+  nftSide_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  nftTakeValue?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftTakeValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftTakeValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftValue?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  nftValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  nftValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  or?: InputMaybe<Array<InputMaybe<Transaction1_Filter>>>;
+  originFee?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  originFee_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_not?: InputMaybe<Scalars['BigInt']['input']>;
+  originFee_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentAmount?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentAmount_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentAmount_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentData?: InputMaybe<Scalars['String']['input']>;
+  paymentDataLength?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentDataLength_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentDataLength_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentData_contains?: InputMaybe<Scalars['String']['input']>;
+  paymentData_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_ends_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_gt?: InputMaybe<Scalars['String']['input']>;
+  paymentData_gte?: InputMaybe<Scalars['String']['input']>;
+  paymentData_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  paymentData_lt?: InputMaybe<Scalars['String']['input']>;
+  paymentData_lte?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_contains?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  paymentData_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentData_starts_with?: InputMaybe<Scalars['String']['input']>;
+  paymentData_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  paymentTakeValue?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentTakeValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentTakeValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentTokenAddress?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  paymentTokenAddress_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  paymentTokenAddress_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  paymentValue?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  paymentValue_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_not?: InputMaybe<Scalars['BigInt']['input']>;
+  paymentValue_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  to?: InputMaybe<Scalars['Bytes']['input']>;
+  to_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  to_gt?: InputMaybe<Scalars['Bytes']['input']>;
+  to_gte?: InputMaybe<Scalars['Bytes']['input']>;
+  to_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  to_lt?: InputMaybe<Scalars['Bytes']['input']>;
+  to_lte?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not_contains?: InputMaybe<Scalars['Bytes']['input']>;
+  to_not_in?: InputMaybe<Array<Scalars['Bytes']['input']>>;
+  total?: InputMaybe<Scalars['BigInt']['input']>;
+  total_gt?: InputMaybe<Scalars['BigInt']['input']>;
+  total_gte?: InputMaybe<Scalars['BigInt']['input']>;
+  total_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  total_lt?: InputMaybe<Scalars['BigInt']['input']>;
+  total_lte?: InputMaybe<Scalars['BigInt']['input']>;
+  total_not?: InputMaybe<Scalars['BigInt']['input']>;
+  total_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+};
+
+export enum Transaction1_OrderBy {
+  BlockHeight = 'blockHeight',
+  Exchange = 'exchange',
+  From = 'from',
+  Hash = 'hash',
+  Id = 'id',
+  NftAddress = 'nftAddress',
+  NftData = 'nftData',
+  NftDataLength = 'nftDataLength',
+  NftId = 'nftId',
+  NftSide = 'nftSide',
+  NftTakeValue = 'nftTakeValue',
+  NftValue = 'nftValue',
+  OriginFee = 'originFee',
+  PaymentAmount = 'paymentAmount',
+  PaymentData = 'paymentData',
+  PaymentDataLength = 'paymentDataLength',
+  PaymentTakeValue = 'paymentTakeValue',
+  PaymentTokenAddress = 'paymentTokenAddress',
+  PaymentValue = 'paymentValue',
+  To = 'to',
+  Total = 'total'
+}
 
 export type Transaction_Filter = {
   /** Filter for the block changed event. */
@@ -3479,6 +4149,9 @@ export type ResolversTypes = {
   DirectPurchase: ResolverTypeWrapper<DirectPurchase>;
   DirectPurchase_filter: DirectPurchase_Filter;
   DirectPurchase_orderBy: DirectPurchase_OrderBy;
+  DirectTransaction: ResolverTypeWrapper<DirectTransaction>;
+  DirectTransaction_filter: DirectTransaction_Filter;
+  DirectTransaction_orderBy: DirectTransaction_OrderBy;
   ERC721Contract: ResolverTypeWrapper<Erc721Contract>;
   ERC721Contract_filter: Erc721Contract_Filter;
   ERC721Contract_orderBy: Erc721Contract_OrderBy;
@@ -3524,6 +4197,9 @@ export type ResolversTypes = {
   String: ResolverTypeWrapper<Scalars['String']['output']>;
   Subscription: ResolverTypeWrapper<{}>;
   Transaction: ResolverTypeWrapper<Transaction>;
+  Transaction1: ResolverTypeWrapper<Transaction1>;
+  Transaction1_filter: Transaction1_Filter;
+  Transaction1_orderBy: Transaction1_OrderBy;
   Transaction_filter: Transaction_Filter;
   Transaction_orderBy: Transaction_OrderBy;
   _Block_: ResolverTypeWrapper<_Block_>;
@@ -3551,6 +4227,8 @@ export type ResolversParentTypes = {
   DirectAcceptBid_filter: DirectAcceptBid_Filter;
   DirectPurchase: DirectPurchase;
   DirectPurchase_filter: DirectPurchase_Filter;
+  DirectTransaction: DirectTransaction;
+  DirectTransaction_filter: DirectTransaction_Filter;
   ERC721Contract: Erc721Contract;
   ERC721Contract_filter: Erc721Contract_Filter;
   ERC721Creator: Erc721Creator;
@@ -3583,6 +4261,8 @@ export type ResolversParentTypes = {
   String: Scalars['String']['output'];
   Subscription: {};
   Transaction: Transaction;
+  Transaction1: Transaction1;
+  Transaction1_filter: Transaction1_Filter;
   Transaction_filter: Transaction_Filter;
   _Block_: _Block_;
   _Meta_: _Meta_;
@@ -3690,6 +4370,31 @@ export type DirectPurchaseResolvers<ContextType = any, ParentType extends Resolv
   sellOrderSalt?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
   sellOrderSignature?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
   sellOrderStart?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type DirectTransactionResolvers<ContextType = any, ParentType extends ResolversParentTypes['DirectTransaction'] = ResolversParentTypes['DirectTransaction']> = {
+  blockHeight?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  exchange?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  from?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  hash?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  nftAddress?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  nftData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  nftDataLength?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftId?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftSide?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  nftTakeValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  originFee?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentAmount?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  paymentDataLength?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentTakeValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentTokenAddress?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  paymentValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  to?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  total?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -3841,6 +4546,8 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   directAcceptBids?: Resolver<Array<ResolversTypes['DirectAcceptBid']>, ParentType, ContextType, RequireFields<QueryDirectAcceptBidsArgs, 'first' | 'skip' | 'subgraphError'>>;
   directPurchase?: Resolver<Maybe<ResolversTypes['DirectPurchase']>, ParentType, ContextType, RequireFields<QueryDirectPurchaseArgs, 'id' | 'subgraphError'>>;
   directPurchases?: Resolver<Array<ResolversTypes['DirectPurchase']>, ParentType, ContextType, RequireFields<QueryDirectPurchasesArgs, 'first' | 'skip' | 'subgraphError'>>;
+  directTransaction?: Resolver<Maybe<ResolversTypes['DirectTransaction']>, ParentType, ContextType, RequireFields<QueryDirectTransactionArgs, 'id' | 'subgraphError'>>;
+  directTransactions?: Resolver<Array<ResolversTypes['DirectTransaction']>, ParentType, ContextType, RequireFields<QueryDirectTransactionsArgs, 'first' | 'skip' | 'subgraphError'>>;
   erc721Contract?: Resolver<Maybe<ResolversTypes['ERC721Contract']>, ParentType, ContextType, RequireFields<QueryErc721ContractArgs, 'id' | 'subgraphError'>>;
   erc721Contracts?: Resolver<Array<ResolversTypes['ERC721Contract']>, ParentType, ContextType, RequireFields<QueryErc721ContractsArgs, 'first' | 'skip' | 'subgraphError'>>;
   erc721Creator?: Resolver<Maybe<ResolversTypes['ERC721Creator']>, ParentType, ContextType, RequireFields<QueryErc721CreatorArgs, 'id' | 'subgraphError'>>;
@@ -3866,6 +4573,8 @@ export type QueryResolvers<ContextType = any, ParentType extends ResolversParent
   event?: Resolver<Maybe<ResolversTypes['Event']>, ParentType, ContextType, RequireFields<QueryEventArgs, 'id' | 'subgraphError'>>;
   events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType, RequireFields<QueryEventsArgs, 'first' | 'skip' | 'subgraphError'>>;
   transaction?: Resolver<Maybe<ResolversTypes['Transaction']>, ParentType, ContextType, RequireFields<QueryTransactionArgs, 'id' | 'subgraphError'>>;
+  transaction1?: Resolver<Maybe<ResolversTypes['Transaction1']>, ParentType, ContextType, RequireFields<QueryTransaction1Args, 'id' | 'subgraphError'>>;
+  transaction1S?: Resolver<Array<ResolversTypes['Transaction1']>, ParentType, ContextType, RequireFields<QueryTransaction1SArgs, 'first' | 'skip' | 'subgraphError'>>;
   transactions?: Resolver<Array<ResolversTypes['Transaction']>, ParentType, ContextType, RequireFields<QueryTransactionsArgs, 'first' | 'skip' | 'subgraphError'>>;
 };
 
@@ -3883,6 +4592,8 @@ export type SubscriptionResolvers<ContextType = any, ParentType extends Resolver
   directAcceptBids?: SubscriptionResolver<Array<ResolversTypes['DirectAcceptBid']>, "directAcceptBids", ParentType, ContextType, RequireFields<SubscriptionDirectAcceptBidsArgs, 'first' | 'skip' | 'subgraphError'>>;
   directPurchase?: SubscriptionResolver<Maybe<ResolversTypes['DirectPurchase']>, "directPurchase", ParentType, ContextType, RequireFields<SubscriptionDirectPurchaseArgs, 'id' | 'subgraphError'>>;
   directPurchases?: SubscriptionResolver<Array<ResolversTypes['DirectPurchase']>, "directPurchases", ParentType, ContextType, RequireFields<SubscriptionDirectPurchasesArgs, 'first' | 'skip' | 'subgraphError'>>;
+  directTransaction?: SubscriptionResolver<Maybe<ResolversTypes['DirectTransaction']>, "directTransaction", ParentType, ContextType, RequireFields<SubscriptionDirectTransactionArgs, 'id' | 'subgraphError'>>;
+  directTransactions?: SubscriptionResolver<Array<ResolversTypes['DirectTransaction']>, "directTransactions", ParentType, ContextType, RequireFields<SubscriptionDirectTransactionsArgs, 'first' | 'skip' | 'subgraphError'>>;
   erc721Contract?: SubscriptionResolver<Maybe<ResolversTypes['ERC721Contract']>, "erc721Contract", ParentType, ContextType, RequireFields<SubscriptionErc721ContractArgs, 'id' | 'subgraphError'>>;
   erc721Contracts?: SubscriptionResolver<Array<ResolversTypes['ERC721Contract']>, "erc721Contracts", ParentType, ContextType, RequireFields<SubscriptionErc721ContractsArgs, 'first' | 'skip' | 'subgraphError'>>;
   erc721Creator?: SubscriptionResolver<Maybe<ResolversTypes['ERC721Creator']>, "erc721Creator", ParentType, ContextType, RequireFields<SubscriptionErc721CreatorArgs, 'id' | 'subgraphError'>>;
@@ -3908,6 +4619,8 @@ export type SubscriptionResolvers<ContextType = any, ParentType extends Resolver
   event?: SubscriptionResolver<Maybe<ResolversTypes['Event']>, "event", ParentType, ContextType, RequireFields<SubscriptionEventArgs, 'id' | 'subgraphError'>>;
   events?: SubscriptionResolver<Array<ResolversTypes['Event']>, "events", ParentType, ContextType, RequireFields<SubscriptionEventsArgs, 'first' | 'skip' | 'subgraphError'>>;
   transaction?: SubscriptionResolver<Maybe<ResolversTypes['Transaction']>, "transaction", ParentType, ContextType, RequireFields<SubscriptionTransactionArgs, 'id' | 'subgraphError'>>;
+  transaction1?: SubscriptionResolver<Maybe<ResolversTypes['Transaction1']>, "transaction1", ParentType, ContextType, RequireFields<SubscriptionTransaction1Args, 'id' | 'subgraphError'>>;
+  transaction1S?: SubscriptionResolver<Array<ResolversTypes['Transaction1']>, "transaction1S", ParentType, ContextType, RequireFields<SubscriptionTransaction1SArgs, 'first' | 'skip' | 'subgraphError'>>;
   transactions?: SubscriptionResolver<Array<ResolversTypes['Transaction']>, "transactions", ParentType, ContextType, RequireFields<SubscriptionTransactionsArgs, 'first' | 'skip' | 'subgraphError'>>;
 };
 
@@ -3916,6 +4629,31 @@ export type TransactionResolvers<ContextType = any, ParentType extends Resolvers
   events?: Resolver<Array<ResolversTypes['Event']>, ParentType, ContextType, RequireFields<TransactionEventsArgs, 'first' | 'skip'>>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   timestamp?: Resolver<ResolversTypes['BigInt'], ParentType, ContextType>;
+  __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
+};
+
+export type Transaction1Resolvers<ContextType = any, ParentType extends ResolversParentTypes['Transaction1'] = ResolversParentTypes['Transaction1']> = {
+  blockHeight?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  exchange?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  from?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  hash?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
+  nftAddress?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  nftData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  nftDataLength?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftId?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftSide?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  nftTakeValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  nftValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  originFee?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentAmount?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentData?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
+  paymentDataLength?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentTakeValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  paymentTokenAddress?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  paymentValue?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  to?: Resolver<Maybe<ResolversTypes['Bytes']>, ParentType, ContextType>;
+  total?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
@@ -3943,6 +4681,7 @@ export type Resolvers<ContextType = any> = {
   Creator?: CreatorResolvers<ContextType>;
   DirectAcceptBid?: DirectAcceptBidResolvers<ContextType>;
   DirectPurchase?: DirectPurchaseResolvers<ContextType>;
+  DirectTransaction?: DirectTransactionResolvers<ContextType>;
   ERC721Contract?: Erc721ContractResolvers<ContextType>;
   ERC721Creator?: Erc721CreatorResolvers<ContextType>;
   ERC721Operator?: Erc721OperatorResolvers<ContextType>;
@@ -3959,6 +4698,7 @@ export type Resolvers<ContextType = any> = {
   Query?: QueryResolvers<ContextType>;
   Subscription?: SubscriptionResolvers<ContextType>;
   Transaction?: TransactionResolvers<ContextType>;
+  Transaction1?: Transaction1Resolvers<ContextType>;
   _Block_?: _Block_Resolvers<ContextType>;
   _Meta_?: _Meta_Resolvers<ContextType>;
 };
@@ -3981,6 +4721,22 @@ export const GetCollectionsDocument = gql`
   }
 }
     `;
+export const Get721NfTsDocument = gql`
+    query Get721NFTs($txCreation: String!) {
+  erc721Tokens(where: {txCreation: $txCreation}) {
+    id
+    txCreation
+  }
+}
+    `;
+export const Get1155NfTsDocument = gql`
+    query Get1155NFTs($txCreation: String!) {
+  erc1155Tokens(where: {txCreation: $txCreation}) {
+    id
+    txCreation
+  }
+}
+    `;
 
 export type SdkFunctionWrapper = <T>(action: (requestHeaders?:Record<string, string>) => Promise<T>, operationName: string, operationType?: string) => Promise<T>;
 
@@ -3991,6 +4747,12 @@ export function getSdk(client: GraphQLClient, withWrapper: SdkFunctionWrapper = 
   return {
     GetCollections(variables: GetCollectionsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<GetCollectionsQuery> {
       return withWrapper((wrappedRequestHeaders) => client.request<GetCollectionsQuery>(GetCollectionsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'GetCollections', 'query');
+    },
+    Get721NFTs(variables: Get721NfTsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<Get721NfTsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Get721NfTsQuery>(Get721NfTsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Get721NFTs', 'query');
+    },
+    Get1155NFTs(variables: Get1155NfTsQueryVariables, requestHeaders?: GraphQLClientRequestHeaders): Promise<Get1155NfTsQuery> {
+      return withWrapper((wrappedRequestHeaders) => client.request<Get1155NfTsQuery>(Get1155NfTsDocument, variables, {...requestHeaders, ...wrappedRequestHeaders}), 'Get1155NFTs', 'query');
     }
   };
 }
@@ -4001,3 +4763,17 @@ export type GetCollectionsQueryVariables = Exact<{
 
 
 export type GetCollectionsQuery = { __typename?: 'Query', collections: Array<{ __typename?: 'Collection', id: string, owner?: string | null, txCreation: string, name?: string | null, symbol?: string | null }> };
+
+export type Get721NfTsQueryVariables = Exact<{
+  txCreation: Scalars['String']['input'];
+}>;
+
+
+export type Get721NfTsQuery = { __typename?: 'Query', erc721Tokens: Array<{ __typename?: 'ERC721Token', id: string, txCreation: string }> };
+
+export type Get1155NfTsQueryVariables = Exact<{
+  txCreation: Scalars['String']['input'];
+}>;
+
+
+export type Get1155NfTsQuery = { __typename?: 'Query', erc1155Tokens: Array<{ __typename?: 'ERC1155Token', id: string, txCreation: string }> };

@@ -79,6 +79,7 @@ export class CollectionsCheckProcessor {
           },
           data: {
             status: TX_STATUS.SUCCESS,
+            address: response.collections[0].id,
           }
         })
       }
