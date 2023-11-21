@@ -30,7 +30,7 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.FAILED,
             }
           })
-          return done(new Error('Collection data not found'));
+          return done(new Error('NFT data not found'));
         } else {
           // Exceeded maximum retries
           await this.prisma.nFT.update({

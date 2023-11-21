@@ -30,7 +30,6 @@ model NFT {
   id             String     @id @db.VarChar(255)
   name           String     @unique
   ipfsHash       String
-  traits         String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   status         TX_STATUS
@@ -40,6 +39,7 @@ model NFT {
   collectionId   String     @db.Uuid
   collection     Collection @relation(fields: [collectionId], references: [id])
   creator        User       @relation(fields: [creatorId], references: [id])
+  Trait          Trait[]
   owners         UserNFT[]
 }
 
@@ -61,11 +61,13 @@ model Collection {
   description    String?
   status         TX_STATUS
   type           CONTRACT_TYPE
-  categoryId     Int
+  categoryId     Int?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   address        String?
-  category       Category         @relation(fields: [categoryId], references: [id])
+  shortUrl       String           @unique
+  metadata       String?
+  category       Category?        @relation(fields: [categoryId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
 }
@@ -83,6 +85,15 @@ model Category {
   id         Int          @id @default(autoincrement())
   name       String
   collection Collection[]
+}
+
+model Trait {
+  id           String  @id @db.Uuid
+  value        String
+  nftId        String
+  display_type String?
+  trait_type   String
+  NFT          NFT     @relation(fields: [nftId], references: [id])
 }
 
 enum TX_STATUS {
