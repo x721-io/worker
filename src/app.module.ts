@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { CommonModule } from './modules/common/common.module';
 import { GraphQlcallerModule } from './modules/graph-qlcaller/graph-qlcaller.module';
 import { JobQueueModule } from './modules/job-queue/job-queue.module';
+import { CronModuleModule } from './modules/cron-module/cron-module.module';
 
 @Module({
   imports: [
@@ -25,6 +26,7 @@ import { JobQueueModule } from './modules/job-queue/job-queue.module';
     CommonModule,
     GraphQlcallerModule,
     JobQueueModule,
+    CronModuleModule,
   ],
   providers: [
     PrismaService,
