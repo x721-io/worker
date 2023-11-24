@@ -9,6 +9,7 @@ export class QueueService {
       port: process.env.REDISDB_PORT as unknown as number,
       keyPrefix: process.env.REDIS_PREFIX,
       password: process.env.REDIS_PASSWORD,
+      auth: process.env.REDIS_PASSWORD,
     },
   });
 
