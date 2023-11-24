@@ -1,9 +1,16 @@
 # src/graph-query/getCollections.graphql
 
-query GetCollections($txCreation: String!) {
-    collections(where: {txCreation: $txCreation}) {
+query GetCollections721($txCreation: String!) {
+    erc721Contracts(where: {txCreation: $txCreation}) {
       id
-      owner
+      txCreation
+      name
+      symbol
+    }
+  }   
+query GetCollections1155($txCreation: String!) {
+    erc1155Contracts(where: {txCreation: $txCreation}) {
+      id
       txCreation
       name
       symbol

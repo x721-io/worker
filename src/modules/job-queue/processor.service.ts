@@ -1,29 +1,36 @@
 import { Injectable } from '@nestjs/common';
 import { Job } from 'kue';
 import { GraphQLClient } from 'graphql-request';
-import { GetCollectionsQueryVariables, getSdk } from 'src/generated/graphql';
+import { GetCollections1155Query, GetCollections1155QueryVariables, GetCollections721Query, GetCollections721QueryVariables, getSdk } from 'src/generated/graphql';
 import { QueueService } from './queue.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TX_STATUS } from '@prisma/client';
 
+interface SyncCollection {
+  txCreation: string,
+  type: 'ERC721' | 'ERC1155',
+}
 @Injectable()
 export class CollectionsCheckProcessor {
   private readonly endpoint = process.env.SUBGRAPH_URL;
   private readonly maxRetries = 5;
 
   constructor(private queueService: QueueService, private readonly prisma: PrismaService) {
-    this.queueService.getQueue().process('collection', async (job: Job<{ txCreation: string }>, done) => {
+    this.queueService.getQueue().process('collection', async (job: Job<SyncCollection>, done) => {
       try {
-        const hash = JSON.parse(job.data).txCreation
-        const collectionData = await this.checkCollectionStatus(hash);
-        if (collectionData && collectionData.collections.length > 0) {
+        const obj: SyncCollection = {
+          txCreation: JSON.parse(job.data).txCreation,
+          type: JSON.parse(job.data).type,
+        }
+        const collectionData = await this.checkCollectionStatus(obj);
+        if (collectionData) {
           // Process collection data here
           done();
         } else if (job.attempts.made < this.maxRetries) {
           // If not found, retry after a delay
           await this.prisma.collection.update({
             where: {
-              txCreationHash: hash
+              txCreationHash: obj.txCreation
             },
             data: {
               status: TX_STATUS.FAILED,
@@ -34,7 +41,7 @@ export class CollectionsCheckProcessor {
           // Exceeded maximum retries
           await this.prisma.collection.update({
             where: {
-              txCreationHash: hash
+              txCreationHash: obj.txCreation,
             },
             data: {
               status: TX_STATUS.FAILED,
@@ -42,7 +49,7 @@ export class CollectionsCheckProcessor {
           })
           await this.prisma.collection.update({
             where: {
-              txCreationHash: hash
+              txCreationHash: obj.txCreation,
             },
             data: {
               status: TX_STATUS.FAILED,
@@ -64,28 +71,53 @@ export class CollectionsCheckProcessor {
     return new GraphQLClient(this.endpoint);
   }
 
-  private async checkCollectionStatus(hash: string) {
+  private async checkCollectionStatus({txCreation, type}: SyncCollection): Promise<boolean> {
     const client = this.getGraphqlClient();
+    let isExisted = false;
     const sdk = getSdk(client);
-    console.log('let see: ', hash)
-    const variables: GetCollectionsQueryVariables = { txCreation: hash };
-    try {
-      const response = await sdk.GetCollections(variables);
-      console.log(response);
-      if (response.collections.length > 0) {
-        await this.prisma.collection.update({
-          where: {
-            txCreationHash: hash
-          },
-          data: {
-            status: TX_STATUS.SUCCESS,
-            address: response.collections[0].id,
-          }
-        })
+    console.log('let see: ', txCreation)
+    if (type === 'ERC721') {
+      const variables: GetCollections721QueryVariables = { txCreation: txCreation };
+      try {
+        const response = await sdk.GetCollections721(variables);
+        console.log(response);
+        if (response.erc721Contracts.length > 0) {
+          await this.prisma.collection.update({
+            where: {
+              txCreationHash: txCreation
+            },
+            data: {
+              status: TX_STATUS.SUCCESS,
+              address: response.erc721Contracts[0].id,
+            }
+          })
+          isExisted = true;
+        }
+        return isExisted;
+      } catch (err) {
+        console.log(err);
       }
-      return response;
-    } catch (err) {
-      console.log(err);
+    } else {
+      const variables: GetCollections1155QueryVariables = { txCreation: txCreation };
+      try {
+        const response = await sdk.GetCollections1155(variables);
+        console.log(response);
+        if (response.erc1155Contracts.length > 0) {
+          await this.prisma.collection.update({
+            where: {
+              txCreationHash: txCreation
+            },
+            data: {
+              status: TX_STATUS.SUCCESS,
+              address: response.erc1155Contracts[0].id,
+            }
+          })
+          isExisted = true;
+        }
+        return isExisted;
+      } catch (err) {
+        console.log(err);
+      }
     }
   }
 }

@@ -16,7 +16,7 @@ COPY package.json yarn.lock ./
 RUN yarn install
 
 COPY . .
-
+RUN yarn codegen
 RUN npx prisma generate
 # Build the NestJS project
 RUN yarn build

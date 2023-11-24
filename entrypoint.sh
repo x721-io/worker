@@ -4,4 +4,4 @@
 npx prisma migrate deploy
 
 # Start the NestJS server
-npx prisma studio & yarn start:prod
+yarn start:prod
