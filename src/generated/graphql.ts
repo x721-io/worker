@@ -205,9 +205,10 @@ export enum ActionState {
 
 export type Block = {
   __typename?: 'Block';
+  blockNumber: Scalars['Int']['output'];
+  event: Scalars['String']['output'];
   id: Scalars['ID']['output'];
-  number?: Maybe<Scalars['BigInt']['output']>;
-  time?: Maybe<Scalars['BigInt']['output']>;
+  timestampt: Scalars['Int']['output'];
 };
 
 export type BlockChangedFilter = {
@@ -218,6 +219,34 @@ export type Block_Filter = {
   /** Filter for the block changed event. */
   _change_block?: InputMaybe<BlockChangedFilter>;
   and?: InputMaybe<Array<InputMaybe<Block_Filter>>>;
+  blockNumber?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_gt?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_gte?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_in?: InputMaybe<Array<Scalars['Int']['input']>>;
+  blockNumber_lt?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_lte?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_not?: InputMaybe<Scalars['Int']['input']>;
+  blockNumber_not_in?: InputMaybe<Array<Scalars['Int']['input']>>;
+  event?: InputMaybe<Scalars['String']['input']>;
+  event_contains?: InputMaybe<Scalars['String']['input']>;
+  event_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  event_ends_with?: InputMaybe<Scalars['String']['input']>;
+  event_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  event_gt?: InputMaybe<Scalars['String']['input']>;
+  event_gte?: InputMaybe<Scalars['String']['input']>;
+  event_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  event_lt?: InputMaybe<Scalars['String']['input']>;
+  event_lte?: InputMaybe<Scalars['String']['input']>;
+  event_not?: InputMaybe<Scalars['String']['input']>;
+  event_not_contains?: InputMaybe<Scalars['String']['input']>;
+  event_not_contains_nocase?: InputMaybe<Scalars['String']['input']>;
+  event_not_ends_with?: InputMaybe<Scalars['String']['input']>;
+  event_not_ends_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  event_not_in?: InputMaybe<Array<Scalars['String']['input']>>;
+  event_not_starts_with?: InputMaybe<Scalars['String']['input']>;
+  event_not_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
+  event_starts_with?: InputMaybe<Scalars['String']['input']>;
+  event_starts_with_nocase?: InputMaybe<Scalars['String']['input']>;
   id?: InputMaybe<Scalars['ID']['input']>;
   id_gt?: InputMaybe<Scalars['ID']['input']>;
   id_gte?: InputMaybe<Scalars['ID']['input']>;
@@ -226,23 +255,15 @@ export type Block_Filter = {
   id_lte?: InputMaybe<Scalars['ID']['input']>;
   id_not?: InputMaybe<Scalars['ID']['input']>;
   id_not_in?: InputMaybe<Array<Scalars['ID']['input']>>;
-  number?: InputMaybe<Scalars['BigInt']['input']>;
-  number_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  number_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  number_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  number_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  number_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  number_not?: InputMaybe<Scalars['BigInt']['input']>;
-  number_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
   or?: InputMaybe<Array<InputMaybe<Block_Filter>>>;
-  time?: InputMaybe<Scalars['BigInt']['input']>;
-  time_gt?: InputMaybe<Scalars['BigInt']['input']>;
-  time_gte?: InputMaybe<Scalars['BigInt']['input']>;
-  time_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
-  time_lt?: InputMaybe<Scalars['BigInt']['input']>;
-  time_lte?: InputMaybe<Scalars['BigInt']['input']>;
-  time_not?: InputMaybe<Scalars['BigInt']['input']>;
-  time_not_in?: InputMaybe<Array<Scalars['BigInt']['input']>>;
+  timestampt?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_gt?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_gte?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_in?: InputMaybe<Array<Scalars['Int']['input']>>;
+  timestampt_lt?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_lte?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_not?: InputMaybe<Scalars['Int']['input']>;
+  timestampt_not_in?: InputMaybe<Array<Scalars['Int']['input']>>;
 };
 
 export type Block_Height = {
@@ -252,9 +273,10 @@ export type Block_Height = {
 };
 
 export enum Block_OrderBy {
+  BlockNumber = 'blockNumber',
+  Event = 'event',
   Id = 'id',
-  Number = 'number',
-  Time = 'time'
+  Timestampt = 'timestampt'
 }
 
 export enum ContractType {
@@ -3288,9 +3310,10 @@ export interface BigIntScalarConfig extends GraphQLScalarTypeConfig<ResolversTyp
 }
 
 export type BlockResolvers<ContextType = any, ParentType extends ResolversParentTypes['Block'] = ResolversParentTypes['Block']> = {
+  blockNumber?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
+  event?: Resolver<ResolversTypes['String'], ParentType, ContextType>;
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
-  number?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  time?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
+  timestampt?: Resolver<ResolversTypes['Int'], ParentType, ContextType>;
   __isTypeOf?: IsTypeOfResolverFn<ParentType, ContextType>;
 };
 
