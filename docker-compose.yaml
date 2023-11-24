@@ -7,17 +7,13 @@ services:
       dockerfile: Dockerfile
     restart: always
     ports:
-      - '8887:8888'
+      - '8887:7777'
     volumes:
       - ../logs/u2u-marketplace-api:/usr/src/app/u2u-server/logs
     networks:
       - u2u-nw
     env_file:
       - .env
-    # logging:
-    #   driver: gcplogs
-    #   options:
-    #     gcp-project: web-team-380004
 networks:
   u2u-nw:
     external: true

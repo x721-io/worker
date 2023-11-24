@@ -3,7 +3,14 @@ import * as kue from 'kue';
 
 @Injectable()
 export class QueueService {
-  private queue = kue.createQueue({ /* Kue configuration */ });
+  private queue = kue.createQueue({
+    redis: {
+      host: process.env.REDISDB_HOST,
+      port: process.env.REDISDB_PORT as unknown as number,
+      keyPrefix: process.env.REDIS_PREFIX,
+      password: process.env.REDIS_PASSWORD,
+    },
+  });
 
   getQueue() {
     return this.queue;
@@ -11,19 +18,25 @@ export class QueueService {
 
   createJob(jobType: string, jobData: any) {
     console.log('Creating job with data:', jobData);
-    const job = this.queue.create(jobType, jobData)
+    const job = this.queue
+      .create(jobType, jobData)
       .removeOnComplete(true)
       .attempts(5) // Number of retries
       .backoff({ delay: 15 * 1000, type: 'fixed' }) // Retry delay
       .save();
 
-      job.on('complete', () => {
+    job
+      .on('complete', () => {
         console.log(`Job completed: ${job.id}`);
         // Additional logic for when the job completes successfully
-      }).on('failed attempt', (errorMessage, doneAttempts) => {
-        console.warn(`Job ${job.id} failed attempt ${doneAttempts} with error: ${errorMessage}`);
+      })
+      .on('failed attempt', (errorMessage, doneAttempts) => {
+        console.warn(
+          `Job ${job.id} failed attempt ${doneAttempts} with error: ${errorMessage}`,
+        );
         // Logic for handling each failed attempt (e.g., logging or alerting)
-      }).on('failed', () => {
+      })
+      .on('failed', () => {
         console.error(`Job ${job.id} failed after all retries`);
         // Logic for handling the final job failure (e.g., notifying admins or taking corrective action)
       });

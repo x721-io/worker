@@ -26,11 +26,8 @@ import { JobQueueModule } from './modules/job-queue/job-queue.module';
     GraphQlcallerModule,
     JobQueueModule,
   ],
-  providers: [
-    PrismaService,
-  ],
+  providers: [PrismaService],
 })
 export class AppModule {
-  constructor() {
-  }
+  constructor() {}
 }

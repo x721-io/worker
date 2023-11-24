@@ -6,6 +6,12 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { NFTsCheckProcessor } from './nft.processor';
 
 @Module({
-  providers: [QueueService, RedisSubscriberService, CollectionsCheckProcessor, PrismaService, NFTsCheckProcessor],
+  providers: [
+    QueueService,
+    RedisSubscriberService,
+    CollectionsCheckProcessor,
+    PrismaService,
+    NFTsCheckProcessor,
+  ],
 })
 export class JobQueueModule {}
