@@ -9,9 +9,10 @@ export class RedisSubscriberService implements OnModuleInit {
   constructor(private queueService: QueueService) {
     this.redisClient = new Redis({
       // Redis configuration
-      host: '127.0.0.1',
-      port: 6379,
-      keyPrefix: 'u2u-marketplace'
+      host: process.env.REDISDB_HOST,
+      port: process.env.REDISDB_PORT as unknown as number,
+      keyPrefix: process.env.REDIS_PREFIX,
+      password: process.env.REDIS_PASSWORD
     });
   }
 
