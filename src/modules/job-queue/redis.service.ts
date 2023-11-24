@@ -1,7 +1,8 @@
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import Redis from 'ioredis';
 import { QueueService } from './queue.service';
-
+import { config as dotenvConfig } from 'dotenv';
+dotenvConfig();
 @Injectable()
 export class RedisSubscriberService implements OnModuleInit {
   private redisClient: Redis;
@@ -17,6 +18,7 @@ export class RedisSubscriberService implements OnModuleInit {
   }
 
   onModuleInit() {
+    console.log(process.env.REDISDB_HOST)
       console.log('ah shit')
     this.redisClient.subscribe('collection-channel');
     this.redisClient.subscribe('nft-channel');
