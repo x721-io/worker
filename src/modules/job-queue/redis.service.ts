@@ -28,15 +28,16 @@ export class RedisSubscriberService implements OnModuleInit {
     console.log(channel, message);
     if (channel === 'collection-channel') {
       const jobData = JSON.parse(message);
-      this.queueService.createJob('collection', jobData);
+      this.queueService.addCollectionJob(jobData.process, jobData.data);
     }
     if (channel === 'nft-channel') {
       const jobData = JSON.parse(message);
-      this.queueService.createJob('nft', jobData);
+      this.queueService.addNftJob(jobData.process, jobData.data);
     }
     if (channel === 'ipfs') {
       const jobData = JSON.parse(message);
-      this.queueService.createJob('ipfs', jobData);
+      // console.log('here: ', jobData)
+      this.queueService.addIPFSJob(jobData.process, jobData.data);
     }
   }
 }
