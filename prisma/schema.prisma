@@ -21,14 +21,22 @@ model User {
   avatar        String?
   id            String           @id @default(uuid()) @db.Uuid
   acceptedTerms Boolean          @default(false)
+  discordLink   String?
+  facebookLink  String?
+  telegramLink  String?
+  twitterLink   String?
+  webURL        String?
+  coverImage    String?
+  bio           String?
+  shortLink     String?          @unique
   nftCreator    NFT[]
   nftCollection UserCollection[]
   nftsOwnership UserNFT[]
 }
 
 model NFT {
-  id             String     @id @db.VarChar(255)
-  name           String     @unique
+  id             String     @db.VarChar(255)
+  name           String
   ipfsHash       String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
@@ -37,18 +45,23 @@ model NFT {
   txCreationHash String     @unique
   creatorId      String     @db.Uuid
   collectionId   String     @db.Uuid
+  imageHash      String?
+  u2uId          String     @db.VarChar(255)
   collection     Collection @relation(fields: [collectionId], references: [id])
   creator        User       @relation(fields: [creatorId], references: [id])
   Trait          Trait[]
-  owners         UserNFT[]
+  UserNFT        UserNFT[]
+
+  @@id([id, collectionId])
 }
 
 model UserNFT {
-  userId   String @db.Uuid
-  nftId    String @db.VarChar(255)
-  quantity Int    @default(1)
-  nft      NFT    @relation(fields: [nftId], references: [id])
-  user     User   @relation(fields: [userId], references: [id])
+  userId       String @db.Uuid
+  nftId        String @db.VarChar(255)
+  quantity     Int    @default(1)
+  collectionId String @db.Uuid
+  NFT          NFT    @relation(fields: [nftId, collectionId], references: [id, collectionId])
+  user         User   @relation(fields: [userId], references: [id])
 
   @@id([userId, nftId])
 }
@@ -64,9 +77,10 @@ model Collection {
   categoryId     Int?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
-  address        String?
+  address        String?          @unique
   shortUrl       String           @unique
   metadata       String?
+  coverImage     String?
   category       Category?        @relation(fields: [categoryId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
@@ -88,12 +102,13 @@ model Category {
 }
 
 model Trait {
-  id           String  @id @db.Uuid
+  id           String  @id @default(uuid()) @db.Uuid
   value        String
   nftId        String
   display_type String?
   trait_type   String
-  NFT          NFT     @relation(fields: [nftId], references: [id])
+  collectionId String  @db.Uuid
+  NFT          NFT     @relation(fields: [nftId, collectionId], references: [id, collectionId])
 }
 
 enum TX_STATUS {

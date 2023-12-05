@@ -1,45 +1,42 @@
 import { Injectable } from '@nestjs/common';
-import * as kue from 'kue';
+import { InjectQueue } from '@nestjs/bull';
+import { Queue, JobOptions } from 'bull';
+import {
+  QUEUE_NAME_COLLECTION,
+  QUEUE_NAME_IPFS,
+  QUEUE_NAME_NFT,
+} from 'src/constants/Job.constant';
 
 @Injectable()
 export class QueueService {
-  private queue = kue.createQueue({
-    redis: {
-      host: process.env.REDISDB_HOST,
-      port: process.env.REDISDB_PORT as unknown as number,
-      keyPrefix: process.env.REDIS_PREFIX,
-      password: process.env.REDIS_PASSWORD,
-      auth: process.env.REDIS_PASSWORD,
+  private defaultJobOptions: JobOptions = {
+    attempts: process.env.MAX_RETRY as unknown as number, // Default number of retry attempts
+    backoff: {
+      type: 'fixed', // or 'exponential'
+      delay: 5000, // Default delay of 5 seconds between retries
     },
-  });
+    // You can add other default settings here
+  };
 
-  getQueue() {
-    return this.queue;
+  constructor(
+    @InjectQueue(QUEUE_NAME_COLLECTION) private collectionQueue: Queue,
+    @InjectQueue(QUEUE_NAME_NFT) private nftQueue: Queue,
+    @InjectQueue(QUEUE_NAME_IPFS) private ipfsQueue: Queue,
+  ) {}
+
+  async addJobToQueue(queue: Queue, jobType: string, jobData: any) {
+    await queue.add(jobType, jobData, this.defaultJobOptions);
   }
 
-  createJob(jobType: string, jobData: any) {
-    console.log('Creating job with data:', jobData);
-    const job = this.queue
-      .create(jobType, jobData)
-      .removeOnComplete(true)
-      .attempts(5) // Number of retries
-      .backoff({ delay: 15 * 1000, type: 'fixed' }) // Retry delay
-      .save();
+  async addCollectionJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.collectionQueue, jobType, jobData);
+  }
 
-    job
-      .on('complete', () => {
-        console.log(`Job completed: ${job.id}`);
-        // Additional logic for when the job completes successfully
-      })
-      .on('failed attempt', (errorMessage, doneAttempts) => {
-        console.warn(
-          `Job ${job.id} failed attempt ${doneAttempts} with error: ${errorMessage}`,
-        );
-        // Logic for handling each failed attempt (e.g., logging or alerting)
-      })
-      .on('failed', () => {
-        console.error(`Job ${job.id} failed after all retries`);
-        // Logic for handling the final job failure (e.g., notifying admins or taking corrective action)
-      });
+  async addNftJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.nftQueue, jobType, jobData);
+  }
+
+  async addIPFSJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.ipfsQueue, jobType, jobData);
   }
 }
