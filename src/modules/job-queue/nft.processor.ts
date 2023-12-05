@@ -69,6 +69,14 @@ export class NFTsCheckProcessor {
   }
 
   // TODO: BUY SELL TRANSFER BID EVENT
+  @Process('nft_buy')
+  private async handleBuy(job: Job<{}>, error: Error) {}
+
+  @Process('nft_bid')
+  private async handleBid(job: Job<{}>, error: Error) {}
+  @Process('nft_transfer')
+  private async handleTransfer(job: Job<{}>, error: Error) {}
+
   @OnQueueFailed()
   private async onNFTCreateFail(job: Job<any>, error: Error) {
     console.error(`Job failed: ${job.id} with error: ${error.message}`);

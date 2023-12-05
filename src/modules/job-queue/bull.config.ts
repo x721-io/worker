@@ -12,6 +12,7 @@ import {
       redis: {
         host: process.env.REDISDB_HOST,
         port: parseInt(process.env.REDISDB_PORT),
+        password: process.env.REDIS_PASSWORD,
       },
     }),
     BullModule.registerQueue(
