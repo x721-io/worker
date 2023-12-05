@@ -7,7 +7,7 @@ import {
 } from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TX_STATUS } from '@prisma/client';
-import { Processor, Process } from '@nestjs/bull';
+import { Processor, Process, OnQueueFailed } from '@nestjs/bull';
 import { Job } from 'bull';
 import { QUEUE_NAME_COLLECTION } from 'src/constants/Job.constant';
 
@@ -52,10 +52,13 @@ export class CollectionsCheckProcessor {
             },
           });
           isExisted = true;
+          return isExisted;
+        } else {
+          throw new Error('NO TX FOUND YET');
         }
-        return isExisted;
       } catch (err) {
         console.log(err);
+        throw err;
       }
     } else {
       const variables: GetCollections1155QueryVariables = {
@@ -75,11 +78,38 @@ export class CollectionsCheckProcessor {
             },
           });
           isExisted = true;
+          return isExisted;
+        } else {
+          throw new Error('NO TX FOUND YET');
         }
-        return isExisted;
       } catch (err) {
         console.log(err);
+        throw err;
       }
+    }
+  }
+
+  @OnQueueFailed()
+  private async onCollectionCreateFail(job: Job<SyncCollection>, error: Error) {
+    console.error(`Job failed: ${job.id} with error: ${error.message}`);
+    const retry = job.attemptsMade;
+    const hash = job.data.txCreation;
+
+    try {
+      if (retry >= parseInt(process.env.MAX_RETRY))
+        await this.prisma.collection.update({
+          where: {
+            txCreationHash: hash,
+          },
+          data: {
+            status: TX_STATUS.FAILED,
+          },
+        });
+      console.log(`Updated status to FAILED for txCreationHash: ${hash}`);
+    } catch (prismaError) {
+      console.error(
+        `Error updating status in database: ${prismaError.message}`,
+      );
     }
   }
 }

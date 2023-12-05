@@ -6,7 +6,7 @@ import {
 } from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { TX_STATUS } from '@prisma/client';
-import { Process, Processor } from '@nestjs/bull';
+import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { QUEUE_NAME_NFT } from 'src/constants/Job.constant';
 import { Job } from 'bull';
 
@@ -42,8 +42,10 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          return response;
+        } else {
+          throw new Error('NO TX FOUND YET');
         }
-        return response;
       } else if (type === 'ERC1155') {
         const response = await sdk.Get1155NFTs(variables);
         if (response.erc1155Tokens.length > 0) {
@@ -55,11 +57,38 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          return response;
+        } else {
+          throw new Error('NO TX FOUND YET');
         }
-        return response;
       }
     } catch (err) {
       console.log(err);
+      throw err;
+    }
+  }
+
+  // TODO: BUY SELL TRANSFER BID EVENT
+  @OnQueueFailed()
+  private async onNFTCreateFail(job: Job<any>, error: Error) {
+    console.error(`Job failed: ${job.id} with error: ${error.message}`);
+    const hash = job.data.txCreation;
+    const retry = job.attemptsMade;
+    try {
+      if (retry >= parseInt(process.env.MAX_RETRY))
+        await this.prisma.nFT.update({
+          where: {
+            txCreationHash: hash,
+          },
+          data: {
+            status: TX_STATUS.FAILED,
+          },
+        });
+      console.log(`Updated status to FAILED for txCreationHash: ${hash}`);
+    } catch (prismaError) {
+      console.error(
+        `Error updating status in database: ${prismaError.message}`,
+      );
     }
   }
 }

@@ -10,10 +10,10 @@ import {
 @Injectable()
 export class QueueService {
   private defaultJobOptions: JobOptions = {
-    attempts: 5, // Default number of retry attempts
+    attempts: process.env.MAX_RETRY as unknown as number, // Default number of retry attempts
     backoff: {
       type: 'fixed', // or 'exponential'
-      delay: 5000, // Default delay of 10 seconds between retries
+      delay: 5000, // Default delay of 5 seconds between retries
     },
     // You can add other default settings here
   };
