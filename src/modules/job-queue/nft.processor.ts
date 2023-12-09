@@ -5,16 +5,26 @@ import {
   getSdk,
 } from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { TX_STATUS } from '@prisma/client';
+import { CONTRACT_TYPE, TX_STATUS } from '@prisma/client';
 import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { QUEUE_NAME_NFT } from 'src/constants/Job.constant';
 import { Job } from 'bull';
+import { NftCrawlerService } from '../nft-crawler/nft-crawler.service';
+import { NotFoundException } from '@nestjs/common';
+import { Metadata } from 'src/commons/types/Trait.type';
 
+interface NftCrawlRequest {
+  type: CONTRACT_TYPE;
+  collectionAddress: string;
+}
 @Processor(QUEUE_NAME_NFT)
 export class NFTsCheckProcessor {
   private readonly endpoint = process.env.SUBGRAPH_URL;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly NftCrawler: NftCrawlerService,
+  ) {}
 
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
@@ -66,6 +76,74 @@ export class NFTsCheckProcessor {
       console.log(err);
       throw err;
     }
+  }
+
+  @Process('nft-crawl')
+  private async crawlNftInfoToDb(job: Job<NftCrawlRequest>) {
+    const { type, collectionAddress } = job.data;
+    const collection = await this.prisma.collection.findUnique({
+      where: {
+        address: collectionAddress.toLowerCase(),
+      },
+    });
+    if (!collection) throw new NotFoundException('Collection not found');
+
+    if (type === 'ERC1155') {
+      const res = await this.NftCrawler.getAllErc1155NftData(collectionAddress);
+      console.log(res);
+    } else {
+      const res = await this.NftCrawler.getAllErc721NftData(collectionAddress);
+      console.log(res);
+      const getMetadata = Promise.all(
+        res.map(async (i) => {
+          const resposne = await fetch(i.tokenUri);
+          return resposne.json();
+        }),
+      );
+      const metadataArray: Metadata[] = await getMetadata;
+      for (let i = 0; i < res.length; i++) {
+        console.log('attributes: ', metadataArray[i].attributes);
+        const convertToStringAttr = metadataArray[i].attributes.map((i) => ({
+          ...i,
+          value: String(i.value),
+        }));
+        await this.prisma.nFT.create({
+          data: {
+            id: res[i].tokenId.toString(),
+            name: metadataArray[i].name,
+            status: TX_STATUS.SUCCESS,
+            tokenUri: res[i].tokenUri,
+            txCreationHash: res[i].txCreation,
+            collectionId: collection.id,
+            ipfsHash: '',
+            imageHash: metadataArray[i].image,
+            Trait: {
+              createMany: {
+                data: convertToStringAttr,
+                skipDuplicates: true,
+              },
+            },
+          },
+        });
+      }
+    }
+    //   await this.prisma.nFT.updateMany({
+    //     where: {
+    //       id_collectionId: {
+    //         id: res,
+    //         collectionId: collection.id,
+    //       },
+    //     },
+    //     data: {
+    //       Trait: {
+    //         createMany: {
+    //           data: traits.data.attribute,
+    //           skipDuplicates: true,
+    //         },
+    //       },
+    //     },
+    //   });
+    // }
   }
 
   // TODO: BUY SELL TRANSFER BID EVENT

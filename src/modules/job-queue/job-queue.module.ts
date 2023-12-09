@@ -7,6 +7,8 @@ import { NFTsCheckProcessor } from './nft.processor';
 import { IPFSProcessor } from './ipfs.processor';
 import { CommonService } from '../common/common.service';
 import { BullConfigModule } from './bull.config';
+import { NftCrawlerService } from '../nft-crawler/nft-crawler.service';
+import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
 
 @Module({
   providers: [
@@ -17,6 +19,8 @@ import { BullConfigModule } from './bull.config';
     NFTsCheckProcessor,
     IPFSProcessor,
     CommonService,
+    NftCrawlerService,
+    GraphQlcallerService,
   ],
   imports: [BullConfigModule],
 })

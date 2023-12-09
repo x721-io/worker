@@ -17,7 +17,6 @@ export class IPFSProcessor {
     const { ipfsUrl, collectionAddress, tokenId } = job.data;
     console.log('let see: ', ipfsUrl);
     const traits = await this.common.getFromIpfs(ipfsUrl);
-    console.log(collectionAddress);
     const collection = await this.prisma.collection.findUnique({
       where: {
         address: collectionAddress.toLowerCase(),
@@ -31,9 +30,14 @@ export class IPFSProcessor {
         },
       },
       data: {
+        ...(traits.data.image && { imageHash: traits.data.image }),
+        ...(traits.data.name && { imageHash: traits.data.name }),
+        ...(traits.data.description && {
+          description: traits.data.description,
+        }),
         Trait: {
           createMany: {
-            data: traits.data.attribute,
+            data: traits.data.attributes,
             skipDuplicates: true,
           },
         },
