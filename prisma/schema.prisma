@@ -47,6 +47,7 @@ model NFT {
   collectionId   String     @db.Uuid
   imageHash      String?
   u2uId          String?    @db.VarChar(255)
+  description    String?
   collection     Collection @relation(fields: [collectionId], references: [id])
   creator        User?      @relation(fields: [creatorId], references: [id])
   Trait          Trait[]
