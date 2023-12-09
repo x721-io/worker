@@ -16,3 +16,32 @@ query GetCollections1155($txCreation: String!) {
       symbol
     }
   }   
+
+  query GetCollectionTokens($collectionAddress: String) {
+  erc1155Tokens(
+    where: {contract_: {id: $collectionAddress}}
+  ) {
+    id
+    tokenId
+    txCreation
+    balances {
+      value
+      account {
+        id
+      }
+      contract {
+        id
+      }
+    }
+  }
+  erc721Tokens(
+    where: {contract_: {id: $collectionAddress}}
+  ) {
+    id
+    tokenId
+    txCreation
+    owner {
+      id
+    }
+  }
+}
