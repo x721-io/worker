@@ -9,5 +9,6 @@ export interface Metadata {
   name: string;
   image: string;
   external_url: string;
+  description: string;
   attributes: Trait[];
 }
