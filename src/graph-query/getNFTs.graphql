@@ -4,6 +4,7 @@ query Get721NFTs($txCreation: String!) {
     erc721Tokens(where: {txCreation: $txCreation}) {
       id
       txCreation
+      tokenId
       contract {
         id
       }
@@ -14,6 +15,7 @@ query Get1155NFTs($txCreation: String!) {
     erc1155Tokens(where: {txCreation: $txCreation}) {
       id
       txCreation
+      tokenId
       contract {
         id
       }

@@ -3742,6 +3742,7 @@ export const Get721NfTsDocument = gql`
   erc721Tokens(where: {txCreation: $txCreation}) {
     id
     txCreation
+    tokenId
     contract {
       id
     }
@@ -3753,6 +3754,7 @@ export const Get1155NfTsDocument = gql`
   erc1155Tokens(where: {txCreation: $txCreation}) {
     id
     txCreation
+    tokenId
     contract {
       id
     }
@@ -3837,11 +3839,11 @@ export type Get721NfTsQueryVariables = Exact<{
 }>;
 
 
-export type Get721NfTsQuery = { __typename?: 'Query', erc721Tokens: Array<{ __typename?: 'ERC721Token', id: string, txCreation: string, contract: { __typename?: 'ERC721Contract', id: string } }> };
+export type Get721NfTsQuery = { __typename?: 'Query', erc721Tokens: Array<{ __typename?: 'ERC721Token', id: string, txCreation: string, tokenId: string, contract: { __typename?: 'ERC721Contract', id: string } }> };
 
 export type Get1155NfTsQueryVariables = Exact<{
   txCreation: Scalars['String']['input'];
 }>;
 
 
-export type Get1155NfTsQuery = { __typename?: 'Query', erc1155Tokens: Array<{ __typename?: 'ERC1155Token', id: string, txCreation: string, contract: { __typename?: 'ERC1155Contract', id: string } }> };
+export type Get1155NfTsQuery = { __typename?: 'Query', erc1155Tokens: Array<{ __typename?: 'ERC1155Token', id: string, txCreation: string, tokenId: string, contract: { __typename?: 'ERC1155Contract', id: string } }> };
