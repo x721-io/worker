@@ -9,7 +9,7 @@ services:
     ports:
       - '8887:7777'
     volumes:
-      - ../logs/u2u-marketplace-api:/usr/src/app/u2u-server/logs
+      - ../logs/u2u-marketplace-worker:/usr/src/app/u2u-server-worker/logs
     networks:
       - u2u-nw
     env_file:

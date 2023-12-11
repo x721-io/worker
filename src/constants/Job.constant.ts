@@ -1,4 +1,3 @@
-const TRACKING_JOB = 'Vucar tracking job';
-export default {
-  TRACKING_JOB,
-};
+export const QUEUE_NAME_COLLECTION = 'marketplace-data-collection';
+export const QUEUE_NAME_NFT = 'marketplace-data-nft';
+export const QUEUE_NAME_IPFS = 'marketplace-data-ipfs';

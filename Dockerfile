@@ -4,7 +4,7 @@ FROM node:20.2.0-alpine3.18
 RUN apk update && apk add --no-cache python3 make g++ xdg-utils
 
 # Set the working directory
-WORKDIR /usr/src/app/u2u-server
+WORKDIR /usr/src/app/u2u-server-worker
 
 # Install the Nest CLI globally
 RUN yarn global add @nestjs/cli
