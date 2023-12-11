@@ -45,7 +45,7 @@ model NFT {
   txCreationHash String     @unique
   creatorId      String?    @db.Uuid
   collectionId   String     @db.Uuid
-  imageHash      String?
+  image          String?
   u2uId          String?    @db.VarChar(255)
   description    String?
   collection     Collection @relation(fields: [collectionId], references: [id])
@@ -82,6 +82,7 @@ model Collection {
   shortUrl       String           @unique
   metadata       String?
   coverImage     String?
+  avatar         String?
   category       Category?        @relation(fields: [categoryId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
