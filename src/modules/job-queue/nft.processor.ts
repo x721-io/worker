@@ -80,7 +80,6 @@ export class NFTsCheckProcessor {
   }
 
   private async processAndSaveNft(input: NftData[], collection: Collection) {
-    console.log(input)
     const getMetadata = Promise.all(
       input.map(async (i) => {
         try {
@@ -113,7 +112,6 @@ export class NFTsCheckProcessor {
           },
         },
       });
-      console.log('is existed: ', nftExisted)
       if (!nftExisted) {
         await this.prisma.nFT.create({
           data: {
@@ -124,7 +122,7 @@ export class NFTsCheckProcessor {
             txCreationHash: input[i].txCreation,
             collectionId: collection.id,
             ipfsHash: '',
-            imageHash: metadataArray[i].image,
+            image: metadataArray[i].image,
             Trait: {
               createMany: {
                 data: convertToStringAttr,
@@ -191,7 +189,7 @@ export class NFTsCheckProcessor {
                 txCreationHash: hash,
                 collectionId: collection.id,
                 ipfsHash: '',
-                imageHash: metadata.image,
+                image: metadata.image,
                 description: metadata.description,
                 Trait: {
                   createMany: {
@@ -253,7 +251,7 @@ export class NFTsCheckProcessor {
                 txCreationHash: hash,
                 collectionId: collection.id,
                 ipfsHash: '',
-                imageHash: metadata.image,
+                image: metadata.image,
                 description: metadata.description,
                 Trait: {
                   createMany: {
