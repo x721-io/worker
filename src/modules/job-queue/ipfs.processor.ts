@@ -30,7 +30,7 @@ export class IPFSProcessor {
         },
       },
       data: {
-        ...(traits.data.image && { imageHash: traits.data.image }),
+        ...(traits.data.image && { image: traits.data.image }),
         ...(traits.data.name && { name: traits.data.name }),
         ...(traits.data.description && {
           description: traits.data.description,
