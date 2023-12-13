@@ -64,7 +64,7 @@ model UserNFT {
   NFT          NFT    @relation(fields: [nftId, collectionId], references: [id, collectionId])
   user         User   @relation(fields: [userId], references: [id])
 
-  @@id([userId, nftId])
+  @@id([userId, nftId, collectionId])
 }
 
 model Collection {
