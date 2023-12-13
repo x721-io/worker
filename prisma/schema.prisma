@@ -32,6 +32,7 @@ model User {
   nftCreator    NFT[]
   nftCollection UserCollection[]
   nftsOwnership UserNFT[]
+  UserProject   UserProject[]
 }
 
 model NFT {
@@ -83,7 +84,9 @@ model Collection {
   metadata       String?
   coverImage     String?
   avatar         String?
+  projectId      String?          @unique @db.Uuid
   category       Category?        @relation(fields: [categoryId], references: [id])
+  Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
 }
@@ -111,6 +114,56 @@ model Trait {
   trait_type   String
   collectionId String  @db.Uuid
   NFT          NFT     @relation(fields: [nftId, collectionId], references: [id, collectionId])
+}
+
+model Project {
+  id           String         @id @db.Uuid
+  idOnchain    Int
+  name         String
+  banner       String?
+  description  String?
+  organization String?
+  website      String?
+  teleLink     String?
+  facebookLink String?
+  instaLink    String?
+  discordLink  String?
+  shortLink    String?
+  isActivated  Boolean        @default(false)
+  Collection   Collection?
+  ProjectRound ProjectRound[]
+  UserProject  UserProject[]
+}
+
+model ProjectRound {
+  projectId String    @db.Uuid
+  address   String?
+  end       DateTime
+  start     DateTime
+  roundId   Int
+  Project   Project   @relation(fields: [projectId], references: [id])
+  RoundInfo RoundInfo @relation(fields: [roundId], references: [id])
+
+  @@id([projectId, roundId])
+}
+
+model RoundInfo {
+  name         String?
+  description  String?
+  id           Int            @id @default(autoincrement())
+  ProjectRound ProjectRound[]
+}
+
+model UserProject {
+  userId         String    @db.Uuid
+  projectId      String    @db.Uuid
+  subscribeDate  DateTime  @default(now())
+  stakingTotal   String?
+  lastDateRecord DateTime? @default(now())
+  Project        Project   @relation(fields: [projectId], references: [id])
+  User           User      @relation(fields: [userId], references: [id])
+
+  @@id([userId, projectId])
 }
 
 enum TX_STATUS {

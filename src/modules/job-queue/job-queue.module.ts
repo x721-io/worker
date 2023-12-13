@@ -9,6 +9,7 @@ import { CommonService } from '../common/common.service';
 import { BullConfigModule } from './bull.config';
 import { NftCrawlerService } from '../nft-crawler/nft-crawler.service';
 import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
+import { ProjectProcessor } from './project.processor';
 
 @Module({
   providers: [
@@ -21,6 +22,7 @@ import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
     CommonService,
     NftCrawlerService,
     GraphQlcallerService,
+    ProjectProcessor,
   ],
   imports: [BullConfigModule],
 })

@@ -4,6 +4,8 @@ import {
   QUEUE_NAME_COLLECTION,
   QUEUE_NAME_IPFS,
   QUEUE_NAME_NFT,
+  QUEUE_NAME_PROJECT,
+  QUEUE_NAME_TIMER,
 } from '../../constants/Job.constant';
 
 @Module({
@@ -21,6 +23,8 @@ import {
       },
       { name: QUEUE_NAME_NFT },
       { name: QUEUE_NAME_IPFS },
+      { name: QUEUE_NAME_PROJECT },
+      { name: QUEUE_NAME_TIMER },
     ),
   ],
   exports: [BullModule],
