@@ -1,0 +1,462 @@
+{
+	"deploy": {
+	  "VM:-": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "main:1": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "ropsten:3": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "rinkeby:4": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "kovan:42": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "goerli:5": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  },
+	  "Custom": {
+		"linkReferences": {},
+		"autoDeployLib": true
+	  }
+	},
+	"data": {
+	  "bytecode": {
+		"generatedSources": [],
+		"linkReferences": {},
+		"object": "",
+		"opcodes": "",
+		"sourceMap": ""
+	  },
+	  "deployedBytecode": {
+		"generatedSources": [],
+		"immutableReferences": {},
+		"linkReferences": {},
+		"object": "",
+		"opcodes": "",
+		"sourceMap": ""
+	  },
+	  "gasEstimates": null,
+	  "methodIdentifiers": {
+		"getAmountBought(address)": "e1b0e0f4",
+		"getAmountUser()": "72c3e3d6",
+		"getCollection()": "4251921e",
+		"getProjectId()": "1270e10c",
+		"getRound()": "9f8743f7",
+		"isAdmin(address)": "24d7806c",
+		"isLocked()": "a4e2d634",
+		"isUserJoined(address)": "b5c210ca",
+		"lock()": "f83d08ba",
+		"owner()": "8da5cb5b",
+		"projectManager()": "029eb76e",
+		"receiveAndIncreaseMaxAmountNFT(uint256,uint256)": "1e996b85",
+		"renounceOwnership()": "715018a6",
+		"setCollection((bool,bool,bool,address,address))": "bd331d9c",
+		"setMaxAmountNFT(uint256)": "98f0ef9b",
+		"setMaxAmountNFTPerWallet(uint256)": "c19eaa22",
+		"setPrice(uint256)": "91b7f5ed",
+		"transferNFTsToNextRound(address,uint256)": "ba3b8dc6",
+		"transferOwnership(address)": "f2fde38b",
+		"weth()": "3fc8cef3"
+	  }
+	},
+	"abi": [
+	  {
+		"anonymous": false,
+		"inputs": [
+		  {
+			"indexed": true,
+			"internalType": "address",
+			"name": "previousOwner",
+			"type": "address"
+		  },
+		  {
+			"indexed": true,
+			"internalType": "address",
+			"name": "newOwner",
+			"type": "address"
+		  }
+		],
+		"name": "OwnershipTransferred",
+		"type": "event"
+	  },
+	  {
+		"inputs": [
+		  {
+			"internalType": "address",
+			"name": "user",
+			"type": "address"
+		  }
+		],
+		"name": "getAmountBought",
+		"outputs": [
+		  {
+			"internalType": "uint256",
+			"name": "",
+			"type": "uint256"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "getAmountUser",
+		"outputs": [
+		  {
+			"internalType": "uint256",
+			"name": "",
+			"type": "uint256"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "getCollection",
+		"outputs": [
+		  {
+			"components": [
+			  {
+				"internalType": "bool",
+				"name": "isERC721",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "bool",
+				"name": "isRaribleCollection",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "bool",
+				"name": "isPreminted",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "address",
+				"name": "collectionAddress",
+				"type": "address"
+			  },
+			  {
+				"internalType": "address",
+				"name": "owner",
+				"type": "address"
+			  }
+			],
+			"internalType": "struct LibStructs.Collection",
+			"name": "",
+			"type": "tuple"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "getProjectId",
+		"outputs": [
+		  {
+			"internalType": "uint256",
+			"name": "",
+			"type": "uint256"
+		  }
+		],
+
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "getRound",
+		"outputs": [
+		  {
+			"components": [
+			  {
+				"internalType": "enum LibStructs.RoundType",
+				"name": "roundType",
+				"type": "uint8"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "price",
+				"type": "uint256"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "start",
+				"type": "uint256"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "end",
+				"type": "uint256"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "maxAmountNFT",
+				"type": "uint256"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "soldAmountNFT",
+				"type": "uint256"
+			  },
+			  {
+				"internalType": "uint256",
+				"name": "maxAmountNFTPerWallet",
+				"type": "uint256"
+			  }
+			],
+			"internalType": "struct LibStructs.Round",
+			"name": "",
+			"type": "tuple"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [
+		  {
+			"internalType": "address",
+			"name": "",
+			"type": "address"
+		  }
+		],
+		"name": "isAdmin",
+		"outputs": [
+		  {
+			"internalType": "bool",
+			"name": "",
+			"type": "bool"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "isLocked",
+		"outputs": [
+		  {
+			"internalType": "bool",
+			"name": "",
+			"type": "bool"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [
+		  {
+			"internalType": "address",
+			"name": "",
+			"type": "address"
+		  }
+		],
+		"name": "isUserJoined",
+		"outputs": [
+		  {
+			"internalType": "bool",
+			"name": "",
+			"type": "bool"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "lock",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "owner",
+		"outputs": [
+		  {
+			"internalType": "address",
+			"name": "",
+			"type": "address"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "projectManager",
+		"outputs": [
+		  {
+			"internalType": "address",
+			"name": "",
+			"type": "address"
+		  }
+		],
+		"stateMutability": "view",
+		"type": "function"
+	  },
+	  {
+		"inputs": [
+		  {
+			"internalType": "uint256",
+			"name": "amount",
+			"type": "uint256"
+		  },
+		  {
+			"internalType": "uint256",
+			"name": "newMaxNFTPerWallet",
+			"type": "uint256"
+		  }
+		],
+		"name": "receiveAndIncreaseMaxAmountNFT",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	  },
+	  {
+		"inputs": [],
+		"name": "renounceOwnership",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	  },
+	  {
+		"inputs": [
+		  {
+			"components": [
+			  {
+				"internalType": "bool",
+				"name": "isERC721",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "bool",
+				"name": "isRaribleCollection",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "bool",
+				"name": "isPreminted",
+				"type": "bool"
+			  },
+			  {
+				"internalType": "address",
+				"name": "collectionAddress",
+
+				"type": "address"
+            },
+            {
+              "internalType": "address",
+              "name": "owner",
+              "type": "address"
+            }
+          ],
+          "internalType": "struct LibStructs.Collection",
+          "name": "newCollection",
+          "type": "tuple"
+        }
+      ],
+      "name": "setCollection",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "max",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMaxAmountNFT",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "max",
+          "type": "uint256"
+        }
+      ],
+      "name": "setMaxAmountNFTPerWallet",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "price",
+          "type": "uint256"
+        }
+      ],
+      "name": "setPrice",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "nextRound",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "newMaxNFTPerWallet",
+          "type": "uint256"
+        }
+      ],
+      "name": "transferNFTsToNextRound",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newOwner",
+          "type": "address"
+        }
+      ],
+      "name": "transferOwnership",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "weth",
+      "outputs": [
+        {
+          "internalType": "contract IWETH",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ]
+}

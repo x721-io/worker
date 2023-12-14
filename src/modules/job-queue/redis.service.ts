@@ -21,6 +21,7 @@ export class RedisSubscriberService implements OnModuleInit {
     this.redisClient.subscribe('collection-channel');
     this.redisClient.subscribe('nft-channel');
     this.redisClient.subscribe('ipfs');
+    this.redisClient.subscribe('project-channel');
     this.redisClient.on('message', this.handleMessage.bind(this));
   }
 
@@ -38,6 +39,10 @@ export class RedisSubscriberService implements OnModuleInit {
       const jobData = JSON.parse(message);
       // console.log('here: ', jobData)
       this.queueService.addIPFSJob(jobData.process, jobData.data);
+    }
+    if (channel === 'project-channel') {
+      const jobData = JSON.parse(message);
+      this.queueService.addProjectJob(jobData.process, jobData.data);
     }
   }
 }
