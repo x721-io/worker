@@ -20,9 +20,8 @@ export class ProjectProcessor {
     'https://rpc-nebulas-testnet.uniultra.xyz/',
   );
 
-  private privateKey =
-    'a67e478b3157fe8f554e58621c12364ac47050d3c6cfb7efb1bc9d18d0d31e98';
-  private wallet = new ethers.Wallet(this.privateKey);
+  private privateKey = process.env.ADMIN_PVK as string;
+  private wallet = new ethers.Wallet(this.privateKey, this.provider);
 
   @Process('config-round-timer')
   async configRound(job: Job<ConfigRound>): Promise<void> {
@@ -40,6 +39,7 @@ export class ProjectProcessor {
         { address1: res[i].address, address2: res[i + 1].address },
         res[i].end.getTime(),
       );
+      console.log(`set for round ${i} at ${res[i].end.getTime()}`);
     }
     // await this.testTimer();
   }
@@ -51,23 +51,22 @@ export class ProjectProcessor {
       const roundContract1 = new ethers.Contract(
         address1,
         roundAbi,
-        this.provider,
+        this.wallet,
       );
       const roundContract2 = new ethers.Contract(
         address2,
         roundAbi,
-        this.provider,
+        this.wallet,
       );
       const round = await roundContract1.getRound();
 
-      console.log(round);
       const remaining = BigInt(round[4]) - BigInt(round[5]);
-      console.log(remaining);
-      const walletConnect = roundContract2.connect(this.wallet);
-      //   const tx = await walletConnect.transferNFTsToNextRound(
-      //     address2,
-      //     newMaxAmountNFTPerWallet,
-      //   );
+      const round2 = await roundContract2.getRound();
+      const tx = await roundContract1.transferNFTsToNextRound(
+        address2,
+        round2[6],
+      );
+      await tx.wait();
     } catch (err) {
       console.error(err);
     }
