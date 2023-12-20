@@ -12,6 +12,8 @@ import { Job } from 'bull';
 import { NftCrawlerService, NftData } from '../nft-crawler/nft-crawler.service';
 import { NotFoundException } from '@nestjs/common';
 import { Metadata } from 'src/commons/types/Trait.type';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { CommonService } from '../common/common.service';
 
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
@@ -25,10 +27,31 @@ export class NFTsCheckProcessor {
   constructor(
     private readonly prisma: PrismaService,
     private readonly NftCrawler: NftCrawlerService,
+    private readonly common: CommonService,
   ) {}
 
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
+  }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handlePendingFailedNft() {
+    console.log('vãi lồn');
+    const pendingNfts = await this.prisma.nFT.findMany({
+      where: {
+        OR: [{ status: TX_STATUS.PENDING }],
+      },
+      include: {
+        collection: true,
+      },
+    });
+    console.log(pendingNfts);
+    for (let i = 0; i < pendingNfts.length; i++) {
+      await this.crawlNftInfoToDbSingle(
+        pendingNfts[i].txCreationHash,
+        pendingNfts[i].collection.type,
+      );
+    }
   }
 
   @Process('nft-create')
@@ -136,7 +159,7 @@ export class NFTsCheckProcessor {
   }
 
   @Process('nft-crawl-single')
-  private async crawlNftInfoToDbSingle(job: Job<NftCrawlRequest>) {
+  private async crawlNftInfoToDbSingleJob(job: Job<NftCrawlRequest>) {
     const { txCreation: hash, type } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
@@ -265,6 +288,171 @@ export class NFTsCheckProcessor {
               },
             });
           }
+          return erc1155Tokens;
+        } else {
+          throw new Error('NO TX FOUND YET');
+        }
+      }
+    } catch (err) {
+      console.log(err);
+      throw err;
+    }
+  }
+  private async crawlNftInfoToDbSingle(hash: string, type: CONTRACT_TYPE) {
+    const client = this.getGraphqlClient();
+    const sdk = getSdk(client);
+    console.log('let see: ', hash, type);
+    const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
+      txCreation: hash,
+    };
+    try {
+      if (type === 'ERC721') {
+        const { erc721Tokens } = await sdk.Get721NFTs(variables);
+        console.log(erc721Tokens[0].tokenId);
+        if (erc721Tokens.length > 0) {
+          const collection = await this.prisma.collection.findUnique({
+            where: {
+              address: erc721Tokens[0].contract.id,
+            },
+          });
+          const uri = await this.NftCrawler.getSingleErc721NftData(
+            erc721Tokens[0].tokenId.toString(),
+            erc721Tokens[0].contract.id,
+          );
+          // TODO: fetch metadata
+          let metadata: Metadata;
+          try {
+            console.log('URI: ', uri.tokenUri);
+            metadata = (await this.common.getFromIpfs(uri.tokenUri)).data;
+            // const response = await fetch(uri.tokenUri);
+            // if (!response.ok) {
+            //   throw new Error('Metadata uri is incorrect');
+            // }
+            // metadata = (await response.json()) as Metadata;
+          } catch (error) {
+            console.error('Fetch failed: ', error);
+            return null; // Or an appropriate value for a failed fetch
+          }
+          // TODO: create nft
+          await this.prisma.nFT.upsert({
+            where: {
+              txCreationHash: hash,
+            },
+            update: {
+              status: TX_STATUS.SUCCESS,
+              image: metadata.image,
+              description: metadata.description,
+              Trait: {
+                createMany: {
+                  data: metadata.attributes.map((trait) => ({
+                    ...trait,
+                    value: trait.value.toString(),
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+            create: {
+              id: erc721Tokens[0].tokenId.toString(),
+              name: metadata.name,
+              status: TX_STATUS.SUCCESS,
+              tokenUri: uri.tokenUri,
+              txCreationHash: hash,
+              collectionId: collection.id,
+              ipfsHash: '',
+              image: metadata.image,
+              description: metadata.description,
+              Trait: {
+                createMany: {
+                  data: metadata.attributes.map((trait) => ({
+                    ...trait,
+                    value: trait.value.toString(),
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+          });
+          // }
+          return erc721Tokens;
+        } else {
+          throw new Error('NO TX FOUND YET');
+        }
+      } else if (type === 'ERC1155') {
+        const { erc1155Tokens } = await sdk.Get1155NFTs(variables);
+        if (erc1155Tokens.length > 0) {
+          console.log('ok');
+          const collection = await this.prisma.collection.findUnique({
+            where: {
+              address: erc1155Tokens[0].contract.id,
+            },
+          });
+          const nftExisted = await this.prisma.nFT.findUnique({
+            where: {
+              id_collectionId: {
+                id: erc1155Tokens[0].tokenId.toString(),
+                collectionId: collection.id,
+              },
+            },
+          });
+          // if (!nftExisted) {
+          const uri = await this.NftCrawler.getSingleErc721NftData(
+            erc1155Tokens[0].tokenId.toString(),
+            erc1155Tokens[0].contract.id,
+          );
+          // TODO: fetch metadata
+          let metadata: Metadata;
+          try {
+            const response = await fetch(uri.tokenUri);
+            if (!response.ok) {
+              throw new Error('Metadata uri is incorrect');
+            }
+            metadata = (await response.json()) as Metadata;
+          } catch (error) {
+            console.error('Fetch failed:');
+            return null; // Or an appropriate value for a failed fetch
+          }
+          // TODO: create nft
+          await this.prisma.nFT.upsert({
+            where: {
+              txCreationHash: hash,
+            },
+            update: {
+              status: TX_STATUS.SUCCESS,
+              image: metadata.image,
+              description: metadata.description,
+              Trait: {
+                createMany: {
+                  data: metadata.attributes.map((trait) => ({
+                    ...trait,
+                    value: trait.value.toString(),
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+            create: {
+              id: erc1155Tokens[0].tokenId.toString(),
+              name: metadata.name,
+              status: TX_STATUS.SUCCESS,
+              tokenUri: uri.tokenUri,
+              txCreationHash: hash,
+              collectionId: collection.id,
+              ipfsHash: '',
+              image: metadata.image,
+              description: metadata.description,
+              Trait: {
+                createMany: {
+                  data: metadata.attributes.map((trait) => ({
+                    ...trait,
+                    value: trait.value.toString(),
+                  })),
+                  skipDuplicates: true,
+                },
+              },
+            },
+          });
+          // }
           return erc1155Tokens;
         } else {
           throw new Error('NO TX FOUND YET');

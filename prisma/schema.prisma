@@ -38,7 +38,6 @@ model User {
 model NFT {
   id             String     @db.VarChar(255)
   name           String
-  ipfsHash       String
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   status         TX_STATUS
@@ -124,25 +123,29 @@ model Project {
   description  String?
   organization String?
   website      String?
-  teleLink     String?
-  facebookLink String?
-  instaLink    String?
-  discordLink  String?
   shortLink    String?
   isActivated  Boolean        @default(false)
+  details      Json[]         @default([])
+  discord      String?
+  facebook     String?
+  instagram    String?
+  logo         String?
+  telegram     String?
+  twitter      String?
   Collection   Collection?
   ProjectRound ProjectRound[]
   UserProject  UserProject[]
 }
 
 model ProjectRound {
-  projectId String    @db.Uuid
-  address   String?
-  end       DateTime
-  start     DateTime
-  roundId   Int
-  Project   Project   @relation(fields: [projectId], references: [id])
-  RoundInfo RoundInfo @relation(fields: [roundId], references: [id])
+  projectId      String    @db.Uuid
+  address        String?
+  end            DateTime
+  start          DateTime
+  roundId        Int
+  claimableStart DateTime  @default(now())
+  Project        Project   @relation(fields: [projectId], references: [id])
+  RoundInfo      RoundInfo @relation(fields: [roundId], references: [id])
 
   @@id([projectId, roundId])
 }
