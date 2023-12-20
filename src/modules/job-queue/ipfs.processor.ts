@@ -32,7 +32,9 @@ export class IPFSProcessor {
       data: {
         ...(traits.data.image && { image: traits.data.image }),
         ...(traits.data.name && { name: traits.data.name }),
-        ...(traits.data.animation_url && { name: traits.data.animation_url }),
+        ...(traits.data.animation_url && {
+          animationUrl: traits.data.animation_url,
+        }),
         ...(traits.data.description && {
           description: traits.data.description,
         }),

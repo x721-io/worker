@@ -211,7 +211,9 @@ export class NFTsCheckProcessor {
                 txCreationHash: hash,
                 collectionId: collection.id,
                 ...(metadata.image && { image: metadata.image }),
-                ...(metadata.animation_url && { name: metadata.animation_url }),
+                ...(metadata.animation_url && {
+                  animationUrl: metadata.animation_url,
+                }),
                 description: metadata.description,
                 Trait: {
                   createMany: {
@@ -273,7 +275,9 @@ export class NFTsCheckProcessor {
                 txCreationHash: hash,
                 collectionId: collection.id,
                 ...(metadata.image && { image: metadata.image }),
-                ...(metadata.animation_url && { name: metadata.animation_url }),
+                ...(metadata.animation_url && {
+                  animationUrl: metadata.animation_url,
+                }),
                 description: metadata.description,
                 Trait: {
                   createMany: {
@@ -360,7 +364,9 @@ export class NFTsCheckProcessor {
               txCreationHash: hash,
               collectionId: collection.id,
               ...(metadata.image && { image: metadata.image }),
-              ...(metadata.animation_url && { name: metadata.animation_url }),
+              ...(metadata.animation_url && {
+                animationUrl: metadata.animation_url,
+              }),
               description: metadata.description,
               Trait: {
                 createMany: {
@@ -440,7 +446,9 @@ export class NFTsCheckProcessor {
               txCreationHash: hash,
               collectionId: collection.id,
               ...(metadata.image && { image: metadata.image }),
-              ...(metadata.animation_url && { name: metadata.animation_url }),
+              ...(metadata.animation_url && {
+                animationUrl: metadata.animation_url,
+              }),
               description: metadata.description,
               Trait: {
                 createMany: {
