@@ -144,7 +144,6 @@ export class NFTsCheckProcessor {
             tokenUri: input[i].tokenUri,
             txCreationHash: input[i].txCreation,
             collectionId: collection.id,
-            ipfsHash: '',
             image: metadataArray[i].image,
             Trait: {
               createMany: {
@@ -211,8 +210,8 @@ export class NFTsCheckProcessor {
                 tokenUri: uri.tokenUri,
                 txCreationHash: hash,
                 collectionId: collection.id,
-                ipfsHash: '',
-                image: metadata.image,
+                ...(metadata.image && { image: metadata.image }),
+                ...(metadata.animation_url && { name: metadata.animation_url }),
                 description: metadata.description,
                 Trait: {
                   createMany: {
@@ -273,8 +272,8 @@ export class NFTsCheckProcessor {
                 tokenUri: uri.tokenUri,
                 txCreationHash: hash,
                 collectionId: collection.id,
-                ipfsHash: '',
-                image: metadata.image,
+                ...(metadata.image && { image: metadata.image }),
+                ...(metadata.animation_url && { name: metadata.animation_url }),
                 description: metadata.description,
                 Trait: {
                   createMany: {
@@ -340,7 +339,8 @@ export class NFTsCheckProcessor {
             },
             update: {
               status: TX_STATUS.SUCCESS,
-              image: metadata.image,
+              ...(metadata.image && { image: metadata.image }),
+              ...(metadata.animation_url && { name: metadata.animation_url }),
               description: metadata.description,
               Trait: {
                 createMany: {
@@ -359,8 +359,8 @@ export class NFTsCheckProcessor {
               tokenUri: uri.tokenUri,
               txCreationHash: hash,
               collectionId: collection.id,
-              ipfsHash: '',
-              image: metadata.image,
+              ...(metadata.image && { image: metadata.image }),
+              ...(metadata.animation_url && { name: metadata.animation_url }),
               description: metadata.description,
               Trait: {
                 createMany: {
@@ -419,7 +419,8 @@ export class NFTsCheckProcessor {
             },
             update: {
               status: TX_STATUS.SUCCESS,
-              image: metadata.image,
+              ...(metadata.image && { image: metadata.image }),
+              ...(metadata.animation_url && { name: metadata.animation_url }),
               description: metadata.description,
               Trait: {
                 createMany: {
@@ -438,8 +439,8 @@ export class NFTsCheckProcessor {
               tokenUri: uri.tokenUri,
               txCreationHash: hash,
               collectionId: collection.id,
-              ipfsHash: '',
-              image: metadata.image,
+              ...(metadata.image && { image: metadata.image }),
+              ...(metadata.animation_url && { name: metadata.animation_url }),
               description: metadata.description,
               Trait: {
                 createMany: {

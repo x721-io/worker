@@ -10,5 +10,6 @@ export interface Metadata {
   image: string;
   external_url: string;
   description: string;
+  animation_url: string;
   attributes: Trait[];
 }
