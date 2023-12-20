@@ -41,7 +41,8 @@ export class CommonService {
   async getFromIpfs(hash: string): Promise<{ data: any; type: string }> {
     try {
       const content = [];
-      for await (const chunk of this.ipfs.cat(hash)) {
+      const { cid } = this.parseIpfsPath(hash);
+      for await (const chunk of this.ipfs.cat(cid)) {
         content.push(chunk);
       }
       const buffer = Buffer.concat(content);
@@ -57,6 +58,21 @@ export class CommonService {
     } catch (err) {
       console.error('Error retrieving content from IPFS:', err);
       throw err;
+    }
+  }
+  private parseIpfsPath(ipfsPath: string): { cid: string; filePath: string } {
+    if (ipfsPath.includes('ipfs://ipfs/')) {
+      const pathParts = ipfsPath.replace('ipfs://ipfs/', '').split('/');
+      const cid = pathParts[0];
+      const filePath = pathParts.slice(1).join('/');
+
+      return { cid, filePath };
+    } else {
+      const pathParts = ipfsPath.replace('ipfs://', '').split('/');
+      const cid = pathParts[0];
+      const filePath = pathParts.slice(1).join('/');
+
+      return { cid, filePath };
     }
   }
 }
