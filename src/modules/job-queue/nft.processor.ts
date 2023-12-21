@@ -344,7 +344,10 @@ export class NFTsCheckProcessor {
             update: {
               status: TX_STATUS.SUCCESS,
               ...(metadata.image && { image: metadata.image }),
-              ...(metadata.animation_url && { name: metadata.animation_url }),
+              ...(metadata.animation_url && {
+                animationUrl: metadata.animation_url,
+              }),
+              name: metadata.name,
               description: metadata.description,
               Trait: {
                 createMany: {
