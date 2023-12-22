@@ -1906,7 +1906,7 @@ export type MarketEvent721 = {
   id: Scalars['ID']['output'];
   metadata?: Maybe<Scalars['String']['output']>;
   netPrice?: Maybe<Scalars['BigInt']['output']>;
-  nftId: Erc721Token;
+  nftId?: Maybe<Erc721Token>;
   price?: Maybe<Scalars['BigInt']['output']>;
   quoteToken?: Maybe<Scalars['String']['output']>;
   timestamp: Scalars['BigInt']['output'];
@@ -3496,7 +3496,7 @@ export type MarketEvent721Resolvers<ContextType = any, ParentType extends Resolv
   id?: Resolver<ResolversTypes['ID'], ParentType, ContextType>;
   metadata?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   netPrice?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
-  nftId?: Resolver<ResolversTypes['ERC721Token'], ParentType, ContextType>;
+  nftId?: Resolver<Maybe<ResolversTypes['ERC721Token']>, ParentType, ContextType>;
   price?: Resolver<Maybe<ResolversTypes['BigInt']>, ParentType, ContextType>;
   quoteToken?: Resolver<Maybe<ResolversTypes['String']>, ParentType, ContextType>;
   timestamp?: Resolver<ResolversTypes['BigInt'], ParentType, ContextType>;
@@ -3822,7 +3822,7 @@ export type GetNfTsHistory721QueryVariables = Exact<{
 }>;
 
 
-export type GetNfTsHistory721Query = { __typename?: 'Query', marketEvent721S: Array<{ __typename?: 'MarketEvent721', id: string, event: SellStatus, price?: any | null, to?: string | null, from?: string | null, nftId: { __typename?: 'ERC721Token', id: string } }> };
+export type GetNfTsHistory721Query = { __typename?: 'Query', marketEvent721S: Array<{ __typename?: 'MarketEvent721', id: string, event: SellStatus, price?: any | null, to?: string | null, from?: string | null, nftId?: { __typename?: 'ERC721Token', id: string } | null }> };
 
 export type GetNfTsHistory1155QueryVariables = Exact<{
   first: Scalars['Int']['input'];
