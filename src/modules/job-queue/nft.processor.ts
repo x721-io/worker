@@ -14,6 +14,7 @@ import { NotFoundException } from '@nestjs/common';
 import { Metadata } from 'src/commons/types/Trait.type';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
+import OtherCommon from 'src/commons/Other.common';
 
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
@@ -137,6 +138,14 @@ export class NFTsCheckProcessor {
         },
       });
       if (!nftExisted) {
+        let normId;
+        let u2uId;
+        if (collection.isU2U) {
+          normId = OtherCommon.getNormIdFromU2UId(input[i].tokenId);
+          u2uId = input[i].tokenId;
+        } else {
+          normId = input[i].tokenId;
+        }
         await this.prisma.nFT.upsert({
           where: {
             txCreationHash: input[i].txCreation,
@@ -156,7 +165,7 @@ export class NFTsCheckProcessor {
             },
           },
           create: {
-            id: input[i].tokenId.toString(),
+            id: normId,
             ...(metadataArray[i].name
               ? { name: metadataArray[i].name }
               : { name: input[i].tokenId }),
@@ -165,6 +174,7 @@ export class NFTsCheckProcessor {
             txCreationHash: input[i].txCreation,
             collectionId: collection.id,
             image: metadataArray[i].image,
+            ...(u2uId && { u2uId }),
             Trait: {
               createMany: {
                 data: convertToStringAttr,
