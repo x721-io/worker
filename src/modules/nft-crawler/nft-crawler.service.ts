@@ -103,7 +103,7 @@ export class NftCrawlerService {
           erc1155Tokens[tokenId].tokenId,
         );
         nfts.push({
-          tokenId,
+          tokenId: erc1155Tokens[tokenId].tokenId,
           tokenUri,
           contractType: 'ERC1155',
           txCreation: erc1155Tokens[tokenId].txCreation,
