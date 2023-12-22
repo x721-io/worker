@@ -75,4 +75,18 @@ export class CommonService {
       return { cid, filePath };
     }
   }
+
+  async fetchTokenUri(tokenUri: string) {
+    try {
+      const response = await fetch(tokenUri);
+      if (!response.ok) {
+        return null; // Or an appropriate value for a failed fetch
+      }
+      return response.json();
+    } catch (error) {
+      console.error('Fetch failed:');
+      return (await this.getFromIpfs(tokenUri)).data;
+      // Or an appropriate value for a failed fetch
+    }
+  }
 }
