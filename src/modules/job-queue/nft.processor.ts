@@ -129,61 +129,64 @@ export class NFTsCheckProcessor {
             };
           })
         : null;
-      const nftExisted = await this.prisma.nFT.findUnique({
+      // const nftExisted = await this.prisma.nFT.findUnique({
+      //   where: {
+      //     id_collectionId: {
+      //       id: input[i].tokenId.toString(),
+      //       collectionId: collection.id,
+      //     },
+      //   },
+      // });
+      // if (!nftExisted) {
+      let normId;
+      let u2uId;
+      if (collection.isU2U) {
+        normId = OtherCommon.getNormIdFromU2UId(input[i].tokenId);
+        u2uId = input[i].tokenId;
+      } else {
+        normId = input[i].tokenId;
+      }
+      await this.prisma.nFT.upsert({
         where: {
           id_collectionId: {
-            id: input[i].tokenId.toString(),
+            id: normId,
             collectionId: collection.id,
           },
         },
+        update: {
+          ...(metadataArray[i].name
+            ? { name: metadataArray[i].name }
+            : { name: input[i].tokenId }),
+          status: TX_STATUS.SUCCESS,
+          tokenUri: input[i].tokenUri,
+          image: metadataArray[i].image,
+          Trait: {
+            createMany: {
+              data: convertToStringAttr,
+              skipDuplicates: true,
+            },
+          },
+        },
+        create: {
+          id: normId,
+          ...(metadataArray[i].name
+            ? { name: metadataArray[i].name }
+            : { name: input[i].tokenId }),
+          status: TX_STATUS.SUCCESS,
+          tokenUri: input[i].tokenUri,
+          txCreationHash: input[i].txCreation,
+          collectionId: collection.id,
+          image: metadataArray[i].image,
+          ...(u2uId && { u2uId }),
+          Trait: {
+            createMany: {
+              data: convertToStringAttr,
+              skipDuplicates: true,
+            },
+          },
+        },
       });
-      if (!nftExisted) {
-        let normId;
-        let u2uId;
-        if (collection.isU2U) {
-          normId = OtherCommon.getNormIdFromU2UId(input[i].tokenId);
-          u2uId = input[i].tokenId;
-        } else {
-          normId = input[i].tokenId;
-        }
-        await this.prisma.nFT.upsert({
-          where: {
-            txCreationHash: input[i].txCreation,
-          },
-          update: {
-            ...(metadataArray[i].name
-              ? { name: metadataArray[i].name }
-              : { name: input[i].tokenId }),
-            status: TX_STATUS.SUCCESS,
-            tokenUri: input[i].tokenUri,
-            image: metadataArray[i].image,
-            Trait: {
-              createMany: {
-                data: convertToStringAttr,
-                skipDuplicates: true,
-              },
-            },
-          },
-          create: {
-            id: normId,
-            ...(metadataArray[i].name
-              ? { name: metadataArray[i].name }
-              : { name: input[i].tokenId }),
-            status: TX_STATUS.SUCCESS,
-            tokenUri: input[i].tokenUri,
-            txCreationHash: input[i].txCreation,
-            collectionId: collection.id,
-            image: metadataArray[i].image,
-            ...(u2uId && { u2uId }),
-            Trait: {
-              createMany: {
-                data: convertToStringAttr,
-                skipDuplicates: true,
-              },
-            },
-          },
-        });
-      }
+      // }
     }
   }
 
