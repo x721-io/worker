@@ -113,7 +113,8 @@ export class NFTsCheckProcessor {
           return response.json();
         } catch (error) {
           console.error('Fetch failed:');
-          return null; // Or an appropriate value for a failed fetch
+          return (await this.common.getFromIpfs(i.tokenUri)).data;
+          // Or an appropriate value for a failed fetch
         }
       }),
     );
@@ -139,7 +140,9 @@ export class NFTsCheckProcessor {
         await this.prisma.nFT.create({
           data: {
             id: input[i].tokenId.toString(),
-            name: metadataArray[i].name,
+            ...(metadataArray[i].name
+              ? { name: metadataArray[i].name }
+              : { name: input[i].tokenId }),
             status: TX_STATUS.SUCCESS,
             tokenUri: input[i].tokenUri,
             txCreationHash: input[i].txCreation,
