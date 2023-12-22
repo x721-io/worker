@@ -14,9 +14,7 @@ export interface NftData {
 @Injectable()
 export class NftCrawlerService {
   constructor(private readonly graphQl: GraphQlcallerService) {}
-  private provider = new ethers.JsonRpcProvider(
-    'https://rpc-nebulas-testnet.uniultra.xyz/',
-  );
+  private provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
 
   async getSingleErc721NftData(
     tokenId: string,
