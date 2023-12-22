@@ -85,6 +85,7 @@ model Collection {
   coverImage     String?
   avatar         String?
   projectId      String?          @unique @db.Uuid
+  isU2U          Boolean          @default(true)
   category       Category?        @relation(fields: [categoryId], references: [id])
   Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
@@ -145,6 +146,9 @@ model ProjectRound {
   start          DateTime
   roundId        Int
   claimableStart DateTime  @default(now())
+  maxPerWallet   Int?
+  price          String?
+  totalNftt      Int?
   Project        Project   @relation(fields: [projectId], references: [id])
   RoundInfo      RoundInfo @relation(fields: [roundId], references: [id])
 
@@ -155,6 +159,7 @@ model RoundInfo {
   name         String?
   description  String?
   id           Int            @id @default(autoincrement())
+  type         String?
   ProjectRound ProjectRound[]
 }
 

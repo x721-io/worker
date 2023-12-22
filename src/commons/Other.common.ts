@@ -257,6 +257,14 @@ class OtherCommon {
 
     return isFieldPresent(info.fieldNodes[0].selectionSet, fieldName as string);
   }
+
+  getNormIdFromU2UId(id: string): string {
+    return parseInt(
+      BigInt(id)
+        .toString(16)
+        .substring(id.length - 24),
+    ).toString();
+  }
 }
 
 export default new OtherCommon();
