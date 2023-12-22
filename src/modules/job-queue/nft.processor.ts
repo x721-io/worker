@@ -137,8 +137,25 @@ export class NFTsCheckProcessor {
         },
       });
       if (!nftExisted) {
-        await this.prisma.nFT.create({
-          data: {
+        await this.prisma.nFT.upsert({
+          where: {
+            txCreationHash: input[i].txCreation,
+          },
+          update: {
+            ...(metadataArray[i].name
+              ? { name: metadataArray[i].name }
+              : { name: input[i].tokenId }),
+            status: TX_STATUS.SUCCESS,
+            tokenUri: input[i].tokenUri,
+            image: metadataArray[i].image,
+            Trait: {
+              createMany: {
+                data: convertToStringAttr,
+                skipDuplicates: true,
+              },
+            },
+          },
+          create: {
             id: input[i].tokenId.toString(),
             ...(metadataArray[i].name
               ? { name: metadataArray[i].name }
