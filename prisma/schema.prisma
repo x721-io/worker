@@ -42,7 +42,7 @@ model NFT {
   updatedAt      DateTime   @updatedAt
   status         TX_STATUS
   tokenUri       String
-  txCreationHash String     @unique
+  txCreationHash String
   creatorId      String?    @db.Uuid
   collectionId   String     @db.Uuid
   image          String?
