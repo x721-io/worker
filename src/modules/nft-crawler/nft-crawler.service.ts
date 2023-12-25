@@ -64,25 +64,58 @@ export class NftCrawlerService {
       this.provider,
     );
     const nfts = [];
-    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
-    const { erc721Tokens } =
-      await this.graphQl.getNFTFromCollection(contractAddress);
-    const totalSupply = erc721Tokens.length;
-    for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
-      try {
-        const tokenUri = await erc721Contract.tokenURI(
-          erc721Tokens[tokenId].tokenId,
-        );
-        nfts.push({
-          tokenId: erc721Tokens[tokenId].tokenId,
-          tokenUri,
-          contractType: 'ERC721',
-          txCreation: erc721Tokens[tokenId].txCreation,
-        });
-      } catch (error) {
-        console.error('Error in ERC-721:', tokenId, error);
+    let skip = 0;
+    const first = 100;
+    let hasMore = true;
+    while (hasMore) {
+      const { erc721Tokens } = await this.graphQl.getNFTFromCollection(
+        contractAddress,
+        first,
+        skip,
+      );
+      const fetchedTokensCount = erc721Tokens.length;
+      for (let i = 0; i < fetchedTokensCount; i++) {
+        try {
+          const tokenUri = await erc721Contract.tokenURI(
+            erc721Tokens[i].tokenId,
+          );
+          nfts.push({
+            tokenId: erc721Tokens[i].tokenId,
+            tokenUri,
+            contractType: 'ERC721',
+            txCreation: erc721Tokens[i].txCreation,
+          });
+        } catch (err) {
+          console.log(err);
+          break;
+        }
+      }
+      if (skip > 500) {
+        hasMore = false;
+      } else {
+        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
       }
     }
+
+    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
+    // const { erc721Tokens } =
+    //   await this.graphQl.getNFTFromCollection(contractAddress);
+    // const totalSupply = erc721Tokens.length;
+    // for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
+    //   try {
+    //     const tokenUri = await erc721Contract.tokenURI(
+    //       erc721Tokens[tokenId].tokenId,
+    //     );
+    //     nfts.push({
+    //       tokenId: erc721Tokens[tokenId].tokenId,
+    //       tokenUri,
+    //       contractType: 'ERC721',
+    //       txCreation: erc721Tokens[tokenId].txCreation,
+    //     });
+    // } catch (error) {
+    //   console.error('Error in ERC-721:', tokenId, error);
+    // }
+
     return nfts;
   }
 
@@ -93,25 +126,55 @@ export class NftCrawlerService {
       this.provider,
     );
     const nfts = [];
-    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
-    const { erc1155Tokens } =
-      await this.graphQl.getNFTFromCollection(contractAddress);
-    const totalSupply = erc1155Tokens.length;
-    for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
-      try {
-        const tokenUri = await erc1155Contract.uri(
-          erc1155Tokens[tokenId].tokenId,
-        );
-        nfts.push({
-          tokenId: erc1155Tokens[tokenId].tokenId,
-          tokenUri,
-          contractType: 'ERC1155',
-          txCreation: erc1155Tokens[tokenId].txCreation,
-        });
-      } catch (error) {
-        console.error('Error in ERC-721:', tokenId, error);
+    let skip = 0;
+    const first = 1000;
+    let hasMore = true;
+    while (hasMore) {
+      const { erc1155Tokens } = await this.graphQl.getNFTFromCollection(
+        contractAddress,
+        first,
+        skip,
+      );
+      const fetchedTokensCount = erc1155Tokens.length;
+
+      for (let i = 0; i < fetchedTokensCount; i++) {
+        try {
+          const tokenUri = await erc1155Contract.uri(erc1155Tokens[i].tokenId);
+          nfts.push({
+            tokenId: erc1155Tokens[i].tokenId,
+            tokenUri,
+            contractType: 'ERC1155',
+            txCreation: erc1155Tokens[i].txCreation,
+          });
+        } catch (err) {
+          break;
+        }
+      }
+      if (fetchedTokensCount < first) {
+        hasMore = false;
+      } else {
+        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
       }
     }
+    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
+    // const { erc1155Tokens } =
+    //   await this.graphQl.getNFTFromCollection(contractAddress);
+    // const totalSupply = erc1155Tokens.length;
+    // for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
+    //   try {
+    //     const tokenUri = await erc1155Contract.uri(
+    //       erc1155Tokens[tokenId].tokenId,
+    //     );
+    //     nfts.push({
+    //       tokenId: erc1155Tokens[tokenId].tokenId,
+    //       tokenUri,
+    //       contractType: 'ERC1155',
+    //       txCreation: erc1155Tokens[tokenId].txCreation,
+    //     });
+    //   } catch (error) {
+    //     console.error('Error in ERC-721:', tokenId, error);
+    //   }
+    // }
     return nfts;
   }
 }
