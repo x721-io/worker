@@ -16,7 +16,7 @@ export class ProjectProcessor {
     private readonly prisma: PrismaService,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
   ) {}
-  private provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+  private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 
   private privateKey = process.env.ADMIN_PVK as string;
   private wallet = new ethers.Wallet(this.privateKey, this.provider);
