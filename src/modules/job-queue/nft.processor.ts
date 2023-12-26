@@ -103,12 +103,17 @@ export class NFTsCheckProcessor {
   }
 
   private async processAndSaveNft(input: NftData[], collection: Collection) {
-    const getMetadata = Promise.all(
-      input.map(async (i) => {
-        return await this.common.fetchTokenUri(i.tokenUri);
-      }),
+    // const getMetadata = Promise.all(
+    //   input.map(async (i) => {
+    //     const uri = await this.common.fetchTokenUri(i.tokenUri);
+    //     return uri;
+    //   }),
+    // );
+    const metadataArray: Metadata[] = await this.common.processInBatches(
+      input,
+      2,
     );
-    const metadataArray: Metadata[] = await getMetadata;
+    console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
       const convertToStringAttr = metadataArray[i]
         ? metadataArray[i].attributes.map((i) => {
@@ -175,113 +180,122 @@ export class NFTsCheckProcessor {
     try {
       if (type === 'ERC721') {
         const { erc721Tokens } = await sdk.Get721NFTs(variables);
-        console.log(erc721Tokens[0].tokenId);
         if (erc721Tokens.length > 0) {
-          const collection = await this.prisma.collection.findUnique({
-            where: {
-              address: erc721Tokens[0].contract.id,
-            },
-          });
-          const nftExisted = await this.prisma.nFT.findUnique({
-            where: {
-              id_collectionId: {
-                id: erc721Tokens[0].tokenId.toString(),
-                collectionId: collection.id,
+          for (let i = 0; i < erc721Tokens.length; i++) {
+            const collection = await this.prisma.collection.findUnique({
+              where: {
+                address: erc721Tokens[i].contract.id,
               },
-            },
-          });
-          if (!nftExisted) {
-            const uri = await this.NftCrawler.getSingleErc721NftData(
-              erc721Tokens[0].tokenId.toString(),
-              erc721Tokens[0].contract.id,
-            );
-            // TODO: fetch metadata
-            const metadata: Metadata = await this.common.fetchTokenUri(
-              uri.tokenUri,
-            );
-            // TODO: create nft
-            await this.prisma.nFT.create({
-              data: {
-                id: erc721Tokens[0].tokenId.toString(),
-                name: metadata.name,
-                status: TX_STATUS.SUCCESS,
-                tokenUri: uri.tokenUri,
-                txCreationHash: hash,
-                collectionId: collection.id,
-                ...(metadata.image && { image: metadata.image }),
-                ...(metadata.animation_url && {
-                  animationUrl: metadata.animation_url,
-                }),
-                description: metadata.description,
-                Trait: {
-                  createMany: {
-                    data: metadata.attributes.map((trait) => ({
-                      ...trait,
-                      value: trait.value.toString(),
-                    })),
-                    skipDuplicates: true,
-                  },
+            });
+            if (!collection) {
+              throw new NotFoundException('Collection not found');
+            }
+            const nftExisted = await this.prisma.nFT.findUnique({
+              where: {
+                id_collectionId: {
+                  id: erc721Tokens[i].tokenId.toString(),
+                  collectionId: collection.id,
                 },
               },
             });
+            if (!nftExisted) {
+              const uri = await this.NftCrawler.getSingleErc721NftData(
+                erc721Tokens[i].tokenId.toString(),
+                erc721Tokens[i].contract.id,
+              );
+              // TODO: fetch metadata
+              const metadata: Metadata = await this.common.fetchTokenUri(
+                uri.tokenUri,
+              );
+              // TODO: create nft
+              await this.prisma.nFT.create({
+                data: {
+                  id: erc721Tokens[i].tokenId.toString(),
+                  ...(metadata.name
+                    ? { name: metadata.name }
+                    : { name: erc721Tokens[i].tokenId.toString() }),
+                  status: TX_STATUS.SUCCESS,
+                  tokenUri: uri.tokenUri,
+                  txCreationHash: hash,
+                  collectionId: collection.id,
+                  ...(metadata.image && { image: metadata.image }),
+                  ...(metadata.animation_url && {
+                    animationUrl: metadata.animation_url,
+                  }),
+                  description: metadata.description,
+                  Trait: {
+                    createMany: {
+                      data: metadata.attributes.map((trait) => ({
+                        ...trait,
+                        value: trait.value.toString(),
+                      })),
+                      skipDuplicates: true,
+                    },
+                  },
+                },
+              });
+            }
+            return erc721Tokens;
           }
-          return erc721Tokens;
         } else {
           throw new Error('NO TX FOUND YET');
         }
       } else if (type === 'ERC1155') {
         const { erc1155Tokens } = await sdk.Get1155NFTs(variables);
         if (erc1155Tokens.length > 0) {
-          console.log('ok');
-          const collection = await this.prisma.collection.findUnique({
-            where: {
-              address: erc1155Tokens[0].contract.id,
-            },
-          });
-          const nftExisted = await this.prisma.nFT.findUnique({
-            where: {
-              id_collectionId: {
-                id: erc1155Tokens[0].tokenId.toString(),
-                collectionId: collection.id,
+          for (let i = 0; i < erc1155Tokens.length; i++) {
+            const collection = await this.prisma.collection.findUnique({
+              where: {
+                address: erc1155Tokens[i].contract.id,
               },
-            },
-          });
-          if (!nftExisted) {
-            const uri = await this.NftCrawler.getSingleErc721NftData(
-              erc1155Tokens[0].tokenId.toString(),
-              erc1155Tokens[0].contract.id,
-            );
-            // TODO: fetch metadata
-            const metadata: Metadata = await this.common.fetchTokenUri(
-              uri.tokenUri,
-            );
-            // TODO: create nft
-            await this.prisma.nFT.create({
-              data: {
-                id: erc1155Tokens[0].tokenId.toString(),
-                name: metadata.name,
-                status: TX_STATUS.SUCCESS,
-                tokenUri: uri.tokenUri,
-                txCreationHash: hash,
-                collectionId: collection.id,
-                ...(metadata.image && { image: metadata.image }),
-                ...(metadata.animation_url && {
-                  animationUrl: metadata.animation_url,
-                }),
-                description: metadata.description,
-                Trait: {
-                  createMany: {
-                    data: metadata.attributes.map((trait) => ({
-                      ...trait,
-                      value: trait.value.toString(),
-                    })),
-                    skipDuplicates: true,
-                  },
+            });
+            const nftExisted = await this.prisma.nFT.findUnique({
+              where: {
+                id_collectionId: {
+                  id: erc1155Tokens[i].tokenId.toString(),
+                  collectionId: collection.id,
                 },
               },
             });
+            if (!nftExisted) {
+              const uri = await this.NftCrawler.getSingleErc1155NftData(
+                erc1155Tokens[i].tokenId.toString(),
+                erc1155Tokens[i].contract.id,
+              );
+              // TODO: fetch metadata
+              const metadata: Metadata = await this.common.fetchTokenUri(
+                uri.tokenUri,
+              );
+              // TODO: create nft
+              await this.prisma.nFT.create({
+                data: {
+                  id: erc1155Tokens[i].tokenId.toString(),
+                  ...(metadata.name
+                    ? { name: metadata.name }
+                    : { name: erc1155Tokens[i].tokenId.toString() }),
+                  status: TX_STATUS.SUCCESS,
+                  tokenUri: uri.tokenUri,
+                  txCreationHash: hash,
+                  collectionId: collection.id,
+                  ...(metadata.image && { image: metadata.image }),
+                  ...(metadata.animation_url && {
+                    animationUrl: metadata.animation_url,
+                  }),
+                  description: metadata.description,
+                  Trait: {
+                    createMany: {
+                      data: metadata.attributes.map((trait) => ({
+                        ...trait,
+                        value: trait.value.toString(),
+                      })),
+                      skipDuplicates: true,
+                    },
+                  },
+                },
+              });
+            }
+            return erc1155Tokens;
           }
-          return erc1155Tokens;
         } else {
           throw new Error('NO TX FOUND YET');
         }
@@ -406,7 +420,6 @@ export class NFTsCheckProcessor {
       await this.processAndSaveNft(res, collection);
     } else {
       const res = await this.NftCrawler.getAllErc721NftData(collectionAddress);
-      console.log(res);
       await this.processAndSaveNft(res, collection);
     }
   }

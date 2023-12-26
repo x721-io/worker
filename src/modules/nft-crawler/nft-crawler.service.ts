@@ -4,6 +4,11 @@ import { abi as abi1155 } from 'abis/ERC1155Proxy.json';
 import { ethers } from 'ethers';
 import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
 import { CONTRACT_TYPE } from '@prisma/client';
+import {
+  Multicall,
+  ContractCallResults,
+  ContractCallContext,
+} from 'ethereum-multicall';
 
 export interface NftData {
   tokenId: string;
@@ -14,7 +19,14 @@ export interface NftData {
 @Injectable()
 export class NftCrawlerService {
   constructor(private readonly graphQl: GraphQlcallerService) {}
-  private provider = new ethers.JsonRpcProvider(process.env.RPC_URL);
+  private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
+
+  private multicall = new Multicall({
+    ethersProvider: this.provider,
+    tryAggregate: true,
+    multicallCustomContractAddress:
+      '0xfb9445c71e5a94eebD053D5e85773F62EbdaD37E',
+  });
 
   async getSingleErc721NftData(
     tokenId: string,
@@ -58,29 +70,72 @@ export class NftCrawlerService {
   }
 
   async getAllErc721NftData(contractAddress: string): Promise<NftData[]> {
-    const erc721Contract = new ethers.Contract(
-      contractAddress,
-      abi721,
-      this.provider,
-    );
+    // const erc721Contract = new ethers.Contract(
+    //   contractAddress,
+    //   abi721,
+    //   this.provider,
+    // );
     const nfts = [];
-    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
-    const { erc721Tokens } =
-      await this.graphQl.getNFTFromCollection(contractAddress);
-    const totalSupply = erc721Tokens.length;
-    for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
-      try {
-        const tokenUri = await erc721Contract.tokenURI(
-          erc721Tokens[tokenId].tokenId,
-        );
-        nfts.push({
-          tokenId: erc721Tokens[tokenId].tokenId,
-          tokenUri,
-          contractType: 'ERC721',
-          txCreation: erc721Tokens[tokenId].txCreation,
-        });
-      } catch (error) {
-        console.error('Error in ERC-721:', tokenId, error);
+    let skip = 0;
+    const first = 1000;
+    let hasMore = true;
+    while (hasMore) {
+      const { erc721Tokens } = await this.graphQl.getNFTFromCollection(
+        contractAddress,
+        first,
+        skip,
+      );
+      const contractCallContext: ContractCallContext[] = erc721Tokens.map(
+        (token) => ({
+          reference: `tokenURI-${token.tokenId}`,
+          contractAddress: contractAddress,
+          abi: abi721,
+          calls: [
+            {
+              reference: `tokenURI-${token.tokenId}`,
+              methodName: 'tokenURI',
+              methodParameters: [token.tokenId],
+            },
+          ],
+        }),
+      );
+      const results: ContractCallResults =
+        await this.multicall.call(contractCallContext);
+
+      const fetchedTokensCount = erc721Tokens.length;
+      // for (let i = 0; i < fetchedTokensCount; i++) {
+      //   try {
+      //     const tokenUri = await erc721Contract.tokenURI(
+      //       erc721Tokens[i].tokenId,
+      //     );
+      //     nfts.push({
+      //       tokenId: erc721Tokens[i].tokenId,
+      //       tokenUri,
+      //       contractType: 'ERC721',
+      //       txCreation: erc721Tokens[i].txCreation,
+      //     });
+      //   } catch (err) {
+      //     console.log(err);
+      //     break;
+      //   }
+      // }
+      console.log(fetchedTokensCount);
+      erc721Tokens.forEach((token) => {
+        const result = results.results[`tokenURI-${token.tokenId}`];
+        if (result && result.callsReturnContext[0].success) {
+          const tokenUri = result.callsReturnContext[0].returnValues[0];
+          nfts.push({
+            tokenId: token.tokenId,
+            tokenUri,
+            contractType: 'ERC721',
+            txCreation: token.txCreation,
+          });
+        }
+      });
+      if (fetchedTokensCount < first) {
+        hasMore = false;
+      } else {
+        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
       }
     }
     return nfts;
@@ -93,23 +148,49 @@ export class NftCrawlerService {
       this.provider,
     );
     const nfts = [];
-    // const totalSupply = await this.erc721Contract.totalSupply(); // Assuming totalSupply() is available
-    const { erc1155Tokens } =
-      await this.graphQl.getNFTFromCollection(contractAddress);
-    const totalSupply = erc1155Tokens.length;
-    for (let tokenId = 0; tokenId < totalSupply; tokenId++) {
-      try {
-        const tokenUri = await erc1155Contract.uri(
-          erc1155Tokens[tokenId].tokenId,
-        );
-        nfts.push({
-          tokenId: erc1155Tokens[tokenId].tokenId,
-          tokenUri,
-          contractType: 'ERC1155',
-          txCreation: erc1155Tokens[tokenId].txCreation,
-        });
-      } catch (error) {
-        console.error('Error in ERC-721:', tokenId, error);
+    let skip = 0;
+    const first = 1000;
+    let hasMore = true;
+    while (hasMore) {
+      const { erc1155Tokens } = await this.graphQl.getNFTFromCollection(
+        contractAddress,
+        first,
+        skip,
+      );
+      const contractCallContext: ContractCallContext[] = erc1155Tokens.map(
+        (token) => ({
+          reference: `tokenURI-${token.tokenId}`,
+          contractAddress: contractAddress,
+          abi: abi721,
+          calls: [
+            {
+              reference: `tokenURI-${token.tokenId}`,
+              methodName: 'uri',
+              methodParameters: [token.tokenId],
+            },
+          ],
+        }),
+      );
+      const results: ContractCallResults =
+        await this.multicall.call(contractCallContext);
+
+      const fetchedTokensCount = erc1155Tokens.length;
+      erc1155Tokens.forEach((token) => {
+        const result = results.results[`tokenURI-${token.tokenId}`];
+        if (result && result.callsReturnContext[0].success) {
+          const tokenUri = result.callsReturnContext[0].returnValues[0];
+          nfts.push({
+            tokenId: token.tokenId,
+            tokenUri,
+            contractType: 'ERC1155',
+            txCreation: token.txCreation,
+          });
+        }
+      });
+      if (fetchedTokensCount < first) {
+        hasMore = false;
+      } else {
+        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
       }
     }
     return nfts;

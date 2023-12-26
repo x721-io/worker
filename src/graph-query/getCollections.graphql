@@ -17,9 +17,11 @@ query GetCollections1155($txCreation: String!) {
     }
   }   
 
-  query GetCollectionTokens($collectionAddress: String) {
+  query GetCollectionTokens($collectionAddress: String, $first: Int, $skip: Int) {
   erc1155Tokens(
     where: {contract_: {id: $collectionAddress}}
+    first: $first
+    skip: $skip
   ) {
     id
     tokenId
@@ -36,6 +38,8 @@ query GetCollections1155($txCreation: String!) {
   }
   erc721Tokens(
     where: {contract_: {id: $collectionAddress}}
+    first: $first
+    skip: $skip
   ) {
     id
     tokenId
