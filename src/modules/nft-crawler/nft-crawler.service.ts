@@ -24,8 +24,7 @@ export class NftCrawlerService {
   private multicall = new Multicall({
     ethersProvider: this.provider,
     tryAggregate: true,
-    multicallCustomContractAddress:
-      '0xfb9445c71e5a94eebD053D5e85773F62EbdaD37E',
+    multicallCustomContractAddress: process.env.MULTICALL_CONTRACT,
   });
 
   async getSingleErc721NftData(
