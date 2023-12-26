@@ -3672,8 +3672,12 @@ export const GetCollections1155Document = gql`
 }
     `;
 export const GetCollectionTokensDocument = gql`
-    query GetCollectionTokens($collectionAddress: String) {
-  erc1155Tokens(where: {contract_: {id: $collectionAddress}}) {
+    query GetCollectionTokens($collectionAddress: String, $first: Int, $skip: Int) {
+  erc1155Tokens(
+    where: {contract_: {id: $collectionAddress}}
+    first: $first
+    skip: $skip
+  ) {
     id
     tokenId
     txCreation
@@ -3687,7 +3691,11 @@ export const GetCollectionTokensDocument = gql`
       }
     }
   }
-  erc721Tokens(where: {contract_: {id: $collectionAddress}}) {
+  erc721Tokens(
+    where: {contract_: {id: $collectionAddress}}
+    first: $first
+    skip: $skip
+  ) {
     id
     tokenId
     txCreation
@@ -3809,6 +3817,8 @@ export type GetCollections1155Query = { __typename?: 'Query', erc1155Contracts: 
 
 export type GetCollectionTokensQueryVariables = Exact<{
   collectionAddress?: InputMaybe<Scalars['String']['input']>;
+  first?: InputMaybe<Scalars['Int']['input']>;
+  skip?: InputMaybe<Scalars['Int']['input']>;
 }>;
 
 

@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { create } from 'ipfs-http-client';
 import { PrismaService } from 'src/prisma/prisma.service';
-
 @Injectable()
 export class CommonService {
   private ipfs;
@@ -76,12 +75,26 @@ export class CommonService {
     }
   }
 
+  async processInBatches(input, batchSize) {
+    const results = [];
+    for (let i = 0; i < input.length; i += batchSize) {
+      const batch = input.slice(i, i + batchSize);
+      const batchResults = await Promise.all(
+        batch.map((i) => this.fetchTokenUri(i.tokenUri)),
+      );
+      results.push(...batchResults);
+    }
+    return results;
+  }
+
   async fetchTokenUri(tokenUri: string) {
     try {
+      console.log('hở: ', tokenUri);
       const response = await fetch(tokenUri);
       if (!response.ok) {
         return null; // Or an appropriate value for a failed fetch
       }
+      // console.log(response.json())
       return response.json();
     } catch (error) {
       console.error('Fetch failed:');
