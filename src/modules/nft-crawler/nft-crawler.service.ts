@@ -141,11 +141,6 @@ export class NftCrawlerService {
   }
 
   async getAllErc1155NftData(contractAddress: string): Promise<NftData[]> {
-    const erc1155Contract = new ethers.Contract(
-      contractAddress,
-      abi1155,
-      this.provider,
-    );
     const nfts = [];
     let skip = 0;
     const first = 1000;
@@ -160,7 +155,7 @@ export class NftCrawlerService {
         (token) => ({
           reference: `tokenURI-${token.tokenId}`,
           contractAddress: contractAddress,
-          abi: abi721,
+          abi: abi1155,
           calls: [
             {
               reference: `tokenURI-${token.tokenId}`,
