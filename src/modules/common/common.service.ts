@@ -66,8 +66,14 @@ export class CommonService {
       const filePath = pathParts.slice(1).join('/');
 
       return { cid, filePath };
-    } else {
+    } else if (ipfsPath.includes('ipfs://')) {
       const pathParts = ipfsPath.replace('ipfs://', '').split('/');
+      const cid = pathParts[0];
+      const filePath = pathParts.slice(1).join('/');
+
+      return { cid, filePath };
+    } else {
+      const pathParts = ipfsPath.replace('ipfs:/', '').split('/');
       const cid = pathParts[0];
       const filePath = pathParts.slice(1).join('/');
 
