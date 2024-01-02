@@ -55,6 +55,9 @@ model NFT {
   UserNFT        UserNFT[]
 
   @@id([id, collectionId])
+  @@index([collectionId])
+  @@index([creatorId])
+  @@index([u2uId, collectionId])
 }
 
 model UserNFT {
@@ -115,6 +118,10 @@ model Trait {
   trait_type   String
   collectionId String  @db.Uuid
   NFT          NFT     @relation(fields: [nftId, collectionId], references: [id, collectionId])
+
+  @@index([display_type])
+  @@index([nftId, collectionId])
+  @@index([value])
 }
 
 model Project {
@@ -134,6 +141,10 @@ model Project {
   logo         String?
   telegram     String?
   twitter      String?
+  teleLink     String?
+  facebookLink String?
+  instaLink    String?
+  discordLink  String?
   Collection   Collection?
   ProjectRound ProjectRound[]
   UserProject  UserProject[]
@@ -149,6 +160,7 @@ model ProjectRound {
   maxPerWallet   Int?
   price          String?
   totalNftt      Int?
+  claimableIds   String[]  @default([])
   Project        Project   @relation(fields: [projectId], references: [id])
   RoundInfo      RoundInfo @relation(fields: [roundId], references: [id])
 
