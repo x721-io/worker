@@ -141,10 +141,6 @@ model Project {
   logo         String?
   telegram     String?
   twitter      String?
-  teleLink     String?
-  facebookLink String?
-  instaLink    String?
-  discordLink  String?
   Collection   Collection?
   ProjectRound ProjectRound[]
   UserProject  UserProject[]
@@ -161,6 +157,7 @@ model ProjectRound {
   price          String?
   totalNftt      Int?
   claimableIds   String[]  @default([])
+  instruction    String?
   Project        Project   @relation(fields: [projectId], references: [id])
   RoundInfo      RoundInfo @relation(fields: [roundId], references: [id])
 

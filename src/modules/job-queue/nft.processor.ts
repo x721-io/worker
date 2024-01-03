@@ -111,7 +111,7 @@ export class NFTsCheckProcessor {
     // );
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
-      2,
+      parseInt(process.env.BATCH_PROCESS),
     );
     console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
