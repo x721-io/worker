@@ -116,7 +116,7 @@ export class NFTsCheckProcessor {
     );
     console.log('ủa: ', metadataArray);
 
-    const batchSize = 100;
+    const batchSize = 10;
 
     for (let i = 0; i < input.length; i += batchSize) {
       await delay(1000);
