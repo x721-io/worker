@@ -114,57 +114,69 @@ export class NFTsCheckProcessor {
       parseInt(process.env.BATCH_PROCESS),
     );
     console.log('ủa: ', metadataArray);
-    for (let i = 0; i < input.length; i++) {
-      const convertToStringAttr = metadataArray[i]
-        ? metadataArray[i].attributes.map((i) => {
-            return {
-              ...i,
-              value: String(i.value),
-            };
-          })
-        : null;
-      const { normId, u2uId } = this.getId(input[i].tokenId, collection);
-      await this.prisma.nFT.upsert({
-        where: {
-          id_collectionId: {
-            id: normId,
-            collectionId: collection.id,
-          },
-        },
-        update: {
-          ...(metadataArray[i].name
-            ? { name: metadataArray[i].name }
-            : { name: input[i].tokenId }),
-          status: TX_STATUS.SUCCESS,
-          tokenUri: input[i].tokenUri,
-          image: metadataArray[i].image,
-          Trait: {
-            createMany: {
-              data: convertToStringAttr,
-              skipDuplicates: true,
+    const batchSize = 100;
+
+    for (let i = 0; i < input.length; i += batchSize) {
+      // Create a batch
+      const batch = input.slice(i, i + batchSize);
+
+      try {
+        for (const item of batch) {
+          const convertToStringAttr = metadataArray[i]
+            ? metadataArray[i].attributes.map((i) => {
+                return {
+                  ...i,
+                  value: String(i.value),
+                };
+              })
+            : null;
+          const { normId, u2uId } = this.getId(item.tokenId, collection);
+
+          // Upsert operation for each item in the batch
+          await this.prisma.nFT.upsert({
+            where: {
+              id_collectionId: {
+                id: normId,
+                collectionId: collection.id,
+              },
             },
-          },
-        },
-        create: {
-          id: normId,
-          ...(metadataArray[i].name
-            ? { name: metadataArray[i].name }
-            : { name: input[i].tokenId }),
-          status: TX_STATUS.SUCCESS,
-          tokenUri: input[i].tokenUri,
-          txCreationHash: input[i].txCreation,
-          collectionId: collection.id,
-          image: metadataArray[i].image,
-          ...(u2uId && { u2uId }),
-          Trait: {
-            createMany: {
-              data: convertToStringAttr,
-              skipDuplicates: true,
+            update: {
+              ...(metadataArray[i].name
+                ? { name: metadataArray[i].name }
+                : { name: item.tokenId }),
+              status: TX_STATUS.SUCCESS,
+              tokenUri: item.tokenUri,
+              image: metadataArray[i].image,
+              Trait: {
+                createMany: {
+                  data: convertToStringAttr,
+                  skipDuplicates: true,
+                },
+              },
             },
-          },
-        },
-      });
-      // }
+            create: {
+              id: normId,
+              ...(metadataArray[i].name
+                ? { name: metadataArray[i].name }
+                : { name: item.tokenId }),
+              status: TX_STATUS.SUCCESS,
+              tokenUri: item.tokenUri,
+              txCreationHash: item.txCreation,
+              collectionId: collection.id,
+              image: metadataArray[i].image,
+              ...(u2uId && { u2uId }),
+              Trait: {
+                createMany: {
+                  data: convertToStringAttr,
+                  skipDuplicates: true,
+                },
+              },
+            },
+          });
+        }
+      } catch (err) {
+        throw new Error('error');
+      }
     }
   }
 
