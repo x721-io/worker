@@ -103,6 +103,7 @@ export class NFTsCheckProcessor {
   }
 
   private async processAndSaveNft(input: NftData[], collection: Collection) {
+    const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
     // const getMetadata = Promise.all(
     //   input.map(async (i) => {
     //     const uri = await this.common.fetchTokenUri(i.tokenUri);
@@ -114,9 +115,11 @@ export class NFTsCheckProcessor {
       parseInt(process.env.BATCH_PROCESS),
     );
     console.log('ủa: ', metadataArray);
+
     const batchSize = 100;
 
     for (let i = 0; i < input.length; i += batchSize) {
+      await delay(1000);
       // Create a batch
       const batch = input.slice(i, i + batchSize);
 
