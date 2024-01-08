@@ -61,7 +61,7 @@ export class NFTsCheckProcessor {
     const availableProject = await this.prisma.projectRound.findMany({
       where: {
         AND: [
-          { start: { gte: new Date() } },
+          { stakeBefore: { gte: new Date() } },
           {
             Project: {
               isActivated: true,

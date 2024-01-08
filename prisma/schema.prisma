@@ -155,6 +155,7 @@ model ProjectRound {
   claimableIds    String[]  @default([])
   instruction     String?
   requiredStaking String?
+  stakeBefore     DateTime?
   Project         Project   @relation(fields: [projectId], references: [id])
   RoundInfo       RoundInfo @relation(fields: [roundId], references: [id])
 
