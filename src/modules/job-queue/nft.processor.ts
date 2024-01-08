@@ -15,6 +15,7 @@ import { Metadata } from 'src/commons/types/Trait.type';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
 import OtherCommon from 'src/commons/Other.common';
+import { ApiCallerService } from '../api-caller/api-caller.service';
 
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
@@ -29,6 +30,7 @@ export class NFTsCheckProcessor {
     private readonly prisma: PrismaService,
     private readonly NftCrawler: NftCrawlerService,
     private readonly common: CommonService,
+    private readonly api: ApiCallerService,
   ) {}
 
   private getGraphqlClient() {
@@ -50,6 +52,37 @@ export class NFTsCheckProcessor {
       await this.crawlNftInfoToDbSingle(
         pendingNfts[i],
         pendingNfts[i].collection,
+      );
+    }
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  async handleSyncTotalStake() {
+    const availableProject = await this.prisma.projectRound.findMany({
+      where: {
+        AND: [
+          { start: { gte: new Date() } },
+          {
+            Project: {
+              isActivated: true,
+            },
+          },
+          {
+            RoundInfo: {
+              type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+            },
+          },
+        ],
+      },
+    });
+    for (let i = 0; i < availableProject.length; i++) {
+      console.log(availableProject[i].projectId);
+      await this.api.makePostRequest(
+        `${process.env.BACKEND_URL}/launchpad`,
+        {
+          projectId: availableProject[i].projectId,
+        },
+        {},
       );
     }
   }
