@@ -55,8 +55,6 @@ model NFT {
   UserNFT        UserNFT[]
 
   @@id([id, collectionId])
-  @@index([collectionId])
-  @@index([creatorId])
   @@index([u2uId, collectionId])
 }
 
@@ -119,9 +117,7 @@ model Trait {
   collectionId String  @db.Uuid
   NFT          NFT     @relation(fields: [nftId, collectionId], references: [id, collectionId])
 
-  @@index([display_type])
   @@index([nftId, collectionId])
-  @@index([value])
 }
 
 model Project {
@@ -147,19 +143,20 @@ model Project {
 }
 
 model ProjectRound {
-  projectId      String    @db.Uuid
-  address        String?
-  end            DateTime
-  start          DateTime
-  roundId        Int
-  claimableStart DateTime  @default(now())
-  maxPerWallet   Int?
-  price          String?
-  totalNftt      Int?
-  claimableIds   String[]  @default([])
-  instruction    String?
-  Project        Project   @relation(fields: [projectId], references: [id])
-  RoundInfo      RoundInfo @relation(fields: [roundId], references: [id])
+  projectId       String    @db.Uuid
+  address         String?
+  end             DateTime
+  start           DateTime
+  roundId         Int
+  claimableStart  DateTime  @default(now())
+  maxPerWallet    Int?
+  price           String?
+  totalNftt       Int?
+  claimableIds    String[]  @default([])
+  instruction     String?
+  requiredStaking String?
+  Project         Project   @relation(fields: [projectId], references: [id])
+  RoundInfo       RoundInfo @relation(fields: [roundId], references: [id])
 
   @@id([projectId, roundId])
 }

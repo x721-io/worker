@@ -10,6 +10,7 @@ import { BullConfigModule } from './bull.config';
 import { NftCrawlerService } from '../nft-crawler/nft-crawler.service';
 import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
 import { ProjectProcessor } from './project.processor';
+import { ApiCallerModule } from '../api-caller/api-caller.module';
 
 @Module({
   providers: [
@@ -24,6 +25,6 @@ import { ProjectProcessor } from './project.processor';
     GraphQlcallerService,
     ProjectProcessor,
   ],
-  imports: [BullConfigModule],
+  imports: [BullConfigModule, ApiCallerModule],
 })
 export class JobQueueModule {}
