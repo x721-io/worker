@@ -1,5 +1,6 @@
-import { GraphQLClient } from 'graphql-request';
+import { GraphQLClient, gql } from 'graphql-request';
 import {
+  GetStakingQueryVariables,
   Get1155NfTsQueryVariables,
   Get721NfTsQueryVariables,
   getSdk,
@@ -16,7 +17,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
 import OtherCommon from 'src/commons/Other.common';
 import { ApiCallerService } from '../api-caller/api-caller.service';
-
+import { validate as isValidUUID } from 'uuid';
+import { logger } from 'src/commons';
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
@@ -25,6 +27,7 @@ interface NftCrawlRequest {
 @Processor(QUEUE_NAME_NFT)
 export class NFTsCheckProcessor {
   private readonly endpoint = process.env.SUBGRAPH_URL;
+  private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
 
   constructor(
     private readonly prisma: PrismaService,
@@ -35,6 +38,9 @@ export class NFTsCheckProcessor {
 
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
+  }
+  private getGraphqlClientStaking() {
+    return new GraphQLClient(this.endpointStaking);
   }
 
   @Cron(CronExpression.EVERY_10_SECONDS)
@@ -56,7 +62,7 @@ export class NFTsCheckProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncTotalStake() {
     const availableProject = await this.prisma.projectRound.findMany({
       where: {
@@ -76,15 +82,9 @@ export class NFTsCheckProcessor {
       },
     });
     for (let i = 0; i < availableProject.length; i++) {
-      console.log(availableProject[i].projectId);
-      await this.api.makePostRequest(
-        `${process.env.BACKEND_URL}/launchpad`,
-        {
-          projectId: availableProject[i].projectId,
-        },
-        {},
-      );
+      this.checkStaking(availableProject[i].projectId);
     }
+    logger.info(`Snapshot LaunchPad: ${new Date()}`);
   }
 
   @Process('nft-create')
@@ -494,6 +494,65 @@ export class NFTsCheckProcessor {
       console.error(
         `Error updating status in database: ${prismaError.message}`,
       );
+    }
+  }
+
+  async checkStaking(projectId: string) {
+    try {
+      const result = await this.prisma.project.findFirst({
+        where: {
+          id: projectId,
+        },
+        include: {
+          UserProject: {
+            select: {
+              subscribeDate: true,
+              User: {
+                select: {
+                  id: true,
+                  email: true,
+                  avatar: true,
+                  username: true,
+                  publicKey: true,
+                  signer: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      const { UserProject } = result;
+      const client = this.getGraphqlClientStaking();
+      const sdk = getSdk(client);
+      const listStaking = await Promise.all(
+        UserProject.map(async (item) => {
+          const { User } = item;
+          const variables: GetStakingQueryVariables = {
+            id: User.signer.toLowerCase(),
+          };
+          const response = await sdk.getStaking(variables);
+          const { delegator }: any = response;
+          return { ...item, ...delegator };
+        }),
+      );
+      for (const item of listStaking) {
+        const { User } = item;
+        await this.prisma.userProject.updateMany({
+          where: {
+            userId: User.id,
+            projectId: projectId,
+          },
+          data: {
+            stakingTotal: item.stakedAmount,
+            lastDateRecord: new Date(),
+          },
+        });
+      }
+      return true;
+    } catch (error) {
+      console.log(error);
+      return false;
     }
   }
 }

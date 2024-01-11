@@ -1,0 +1,10 @@
+query getStaking($id: ID!) {
+    delegator(id: $id) {
+    totalLockStake
+    totalClaimedRewards
+    stakedAmount
+    id
+    createdOn
+    address
+    }
+}
