@@ -10,6 +10,7 @@ import { TX_STATUS } from '@prisma/client';
 import { Processor, Process, OnQueueFailed } from '@nestjs/bull';
 import { Job } from 'bull';
 import { QUEUE_NAME_COLLECTION } from 'src/constants/Job.constant';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 interface SyncCollection {
   txCreation: string;
@@ -25,22 +26,50 @@ export class CollectionsCheckProcessor {
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
+
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handlePendingCollection() {
+    const pendingCollections = await this.prisma.collection.findMany({
+      where: {
+        OR: [{ status: TX_STATUS.PENDING }, { status: TX_STATUS.FAILED }],
+      },
+    });
+    for (let i = 0; i < pendingCollections.length; i++) {
+      // await this.crawlNftInfoToDbSingle(
+      //   pendingNfts[i],
+      //   pendingNfts[i].collection,
+      // );
+      await this.getAndSetCollectionStatus(
+        pendingCollections[i].txCreationHash,
+        pendingCollections[i].type,
+      );
+    }
+  }
   @Process('collection-create')
   private async checkCollectionStatus(
     job: Job<SyncCollection>,
   ): Promise<boolean> {
     const { txCreation, type } = job.data;
-    const client = this.getGraphqlClient();
+    try {
+      return await this.getAndSetCollectionStatus(txCreation, type);
+    } catch (err) {
+      throw new Error(err);
+    }
+  }
+
+  async getAndSetCollectionStatus(
+    txCreation: string,
+    type: string,
+  ): Promise<boolean> {
     let isExisted = false;
+    const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    console.log('let see: ', txCreation);
     if (type === 'ERC721') {
       const variables: GetCollections721QueryVariables = {
         txCreation: txCreation,
       };
       try {
         const response = await sdk.GetCollections721(variables);
-        console.log(response);
         if (response.erc721Contracts.length > 0) {
           await this.prisma.collection.update({
             where: {
