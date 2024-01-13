@@ -81,7 +81,7 @@ model Collection {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   address        String?          @unique
-  shortUrl       String           @unique
+  shortUrl       String?           @unique
   metadata       String?
   coverImage     String?
   avatar         String?
