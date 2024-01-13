@@ -6,6 +6,7 @@ import { Process, Processor } from '@nestjs/bull';
 import { Job } from 'bull';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as jwt from 'jsonwebtoken';
+import { logger } from 'src/commons';
 
 @Processor(QUEUE_NAME_USER)
 export class UserProcessor {
@@ -14,8 +15,8 @@ export class UserProcessor {
   @Process('email-verify')
   async verifyEmail(job: Job<any>) {
     try {
-      const { email, name, id } = job?.data;
-      const verifyToken = this.generateTokenConfirm(email, name, id);
+      logger.error(`Send Mail Success: ${JSON.stringify(job?.data)}`);
+      const { email, verifyToken } = job?.data;
       await this.mailService.sendMail({
         to: email,
         subject: 'Email Verify Account Marketplace',
@@ -24,20 +25,11 @@ export class UserProcessor {
           link: `${process.env.MAIL_REDIRECT_URL}/user/email-verification?token=${verifyToken}`,
         },
       });
-      console.log('Send Mail Success');
+      logger.info(`Send Mail Success: ${email}: ${JSON.stringify(job?.data)}`);
       return true;
     } catch (error) {
-      console.log('Send Mail Success', error);
+      logger.error(`Send Mail Failed: ${JSON.stringify(error)}`);
       return false;
     }
-  }
-
-  generateTokenConfirm(email: string, name: string, id: string): string {
-    // Set expiration time to 5 minutes
-    const expirationTime = '5m';
-
-    return jwt.sign({ email, name, id }, this.secretKeyConfirm, {
-      expiresIn: expirationTime,
-    });
   }
 }
