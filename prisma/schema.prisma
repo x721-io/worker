@@ -49,6 +49,7 @@ model NFT {
   u2uId          String?    @db.VarChar(255)
   description    String?
   animationUrl   String?
+  nameSlug       String?
   collection     Collection @relation(fields: [collectionId], references: [id])
   creator        User?      @relation(fields: [creatorId], references: [id])
   Trait          Trait[]
@@ -73,7 +74,7 @@ model Collection {
   id             String           @id @default(uuid()) @db.Uuid
   txCreationHash String           @unique
   name           String           @unique
-  symbol         String           @unique
+  symbol         String
   description    String?
   status         TX_STATUS
   type           CONTRACT_TYPE
@@ -87,10 +88,13 @@ model Collection {
   avatar         String?
   projectId      String?          @unique @db.Uuid
   isU2U          Boolean          @default(true)
+  nameSlug       String?
   category       Category?        @relation(fields: [categoryId], references: [id])
   Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
+
+  @@index([address], type: Hash)
 }
 
 model UserCollection {
