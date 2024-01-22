@@ -246,6 +246,16 @@ export class NFTsCheckProcessor {
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
+
+              const convertToStringAttr =
+                metadata && metadata.attributes
+                  ? metadata.attributes.map((i) => {
+                      return {
+                        ...i,
+                        value: String(i.value),
+                      };
+                    })
+                  : null;
               // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
@@ -262,15 +272,14 @@ export class NFTsCheckProcessor {
                     animationUrl: metadata.animation_url,
                   }),
                   description: metadata.description,
-                  Trait: {
-                    createMany: {
-                      data: metadata.attributes.map((trait) => ({
-                        ...trait,
-                        value: trait.value.toString(),
-                      })),
-                      skipDuplicates: true,
+                  ...(convertToStringAttr && {
+                    Trait: {
+                      createMany: {
+                        data: convertToStringAttr,
+                        skipDuplicates: true,
+                      },
                     },
-                  },
+                  }),
                 },
               });
             }
@@ -305,6 +314,16 @@ export class NFTsCheckProcessor {
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
+              const convertToStringAttr =
+                metadata && metadata.attributes
+                  ? metadata.attributes.map((i) => {
+                      return {
+                        ...i,
+                        value: String(i.value),
+                      };
+                    })
+                  : null;
+              console.log('alo: ', metadata);
               // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
@@ -321,15 +340,14 @@ export class NFTsCheckProcessor {
                     animationUrl: metadata.animation_url,
                   }),
                   description: metadata.description,
-                  Trait: {
-                    createMany: {
-                      data: metadata.attributes.map((trait) => ({
-                        ...trait,
-                        value: trait.value.toString(),
-                      })),
-                      skipDuplicates: true,
+                  ...(convertToStringAttr && {
+                    Trait: {
+                      createMany: {
+                        data: convertToStringAttr,
+                        skipDuplicates: true,
+                      },
                     },
-                  },
+                  }),
                 },
               });
             }
