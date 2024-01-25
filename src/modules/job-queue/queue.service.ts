@@ -6,6 +6,7 @@ import {
   QUEUE_NAME_IPFS,
   QUEUE_NAME_NFT,
   QUEUE_NAME_PROJECT,
+  QUEUE_NAME_USER,
 } from 'src/constants/Job.constant';
 
 @Injectable()
@@ -24,6 +25,7 @@ export class QueueService {
     @InjectQueue(QUEUE_NAME_NFT) private nftQueue: Queue,
     @InjectQueue(QUEUE_NAME_IPFS) private ipfsQueue: Queue,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
+    @InjectQueue(QUEUE_NAME_USER) private userQueue: Queue,
   ) {}
 
   async addJobToQueue(queue: Queue, jobType: string, jobData: any) {
@@ -44,5 +46,9 @@ export class QueueService {
 
   async addProjectJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.projectQueue, jobType, jobData);
+  }
+
+  async addUserJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.userQueue, jobType, jobData);
   }
 }
