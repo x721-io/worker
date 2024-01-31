@@ -11,6 +11,7 @@ import { NftCrawlerService } from '../nft-crawler/nft-crawler.service';
 import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
 import { ProjectProcessor } from './project.processor';
 import { ApiCallerModule } from '../api-caller/api-caller.module';
+import { UserProcessor } from './user.processor';
 
 @Module({
   providers: [
@@ -24,6 +25,7 @@ import { ApiCallerModule } from '../api-caller/api-caller.module';
     NftCrawlerService,
     GraphQlcallerService,
     ProjectProcessor,
+    UserProcessor,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })
