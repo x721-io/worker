@@ -49,6 +49,7 @@ model NFT {
   u2uId          String?    @db.VarChar(255)
   description    String?
   animationUrl   String?
+  nameSlug       String?
   collection     Collection @relation(fields: [collectionId], references: [id])
   creator        User?      @relation(fields: [creatorId], references: [id])
   Trait          Trait[]
@@ -73,7 +74,7 @@ model Collection {
   id             String           @id @default(uuid()) @db.Uuid
   txCreationHash String           @unique
   name           String           @unique
-  symbol         String           @unique
+  symbol         String
   description    String?
   status         TX_STATUS
   type           CONTRACT_TYPE
@@ -81,16 +82,19 @@ model Collection {
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   address        String?          @unique
-  shortUrl       String           @unique
+  shortUrl       String?          @unique
   metadata       String?
   coverImage     String?
   avatar         String?
   projectId      String?          @unique @db.Uuid
   isU2U          Boolean          @default(true)
+  nameSlug       String?
   category       Category?        @relation(fields: [categoryId], references: [id])
   Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
   creators       UserCollection[]
+
+  @@index([address], type: Hash)
 }
 
 model UserCollection {
@@ -121,25 +125,26 @@ model Trait {
 }
 
 model Project {
-  id           String         @id @db.Uuid
-  idOnchain    Int
-  name         String
-  banner       String?
-  description  String?
-  organization String?
-  website      String?
-  shortLink    String?
-  isActivated  Boolean        @default(false)
-  details      Json[]         @default([])
-  discord      String?
-  facebook     String?
-  instagram    String?
-  logo         String?
-  telegram     String?
-  twitter      String?
-  Collection   Collection?
-  ProjectRound ProjectRound[]
-  UserProject  UserProject[]
+  id             String           @id @db.Uuid
+  idOnchain      Int
+  name           String
+  banner         String?
+  description    String?
+  organization   String?
+  website        String?
+  shortLink      String?
+  isActivated    Boolean          @default(false)
+  details        Json[]           @default([])
+  discord        String?
+  facebook       String?
+  instagram      String?
+  logo           String?
+  telegram       String?
+  twitter        String?
+  Collection     Collection?
+  ProjectRound   ProjectRound[]
+  RoundRangeTime RoundRangeTime[]
+  UserProject    UserProject[]
 }
 
 model ProjectRound {
@@ -163,11 +168,12 @@ model ProjectRound {
 }
 
 model RoundInfo {
-  name         String?
-  description  String?
-  id           Int            @id @default(autoincrement())
-  type         String?
-  ProjectRound ProjectRound[]
+  name           String?
+  description    String?
+  id             Int              @id @default(autoincrement())
+  type           String?
+  ProjectRound   ProjectRound[]
+  RoundRangeTime RoundRangeTime[]
 }
 
 model UserProject {
@@ -180,6 +186,16 @@ model UserProject {
   User           User      @relation(fields: [userId], references: [id])
 
   @@id([userId, projectId])
+}
+
+model RoundRangeTime {
+  id        String    @id @db.Uuid
+  roundId   Int
+  projectId String    @db.Uuid
+  start     DateTime
+  end       DateTime
+  Project   Project   @relation(fields: [projectId], references: [id])
+  RoundInfo RoundInfo @relation(fields: [roundId], references: [id])
 }
 
 enum TX_STATUS {

@@ -62,7 +62,7 @@ export class NFTsCheckProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
   async handleSyncTotalStake() {
     const availableProject = await this.prisma.projectRound.findMany({
       where: {
@@ -142,20 +142,22 @@ export class NFTsCheckProcessor {
     //     return uri;
     //   }),
     // );
+    console.log('input: ', input);
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
     );
     console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
-      const convertToStringAttr = metadataArray[i]
-        ? metadataArray[i].attributes.map((i) => {
-            return {
-              ...i,
-              value: String(i.value),
-            };
-          })
-        : null;
+      const convertToStringAttr =
+        metadataArray[i] && metadataArray[i].attributes
+          ? metadataArray[i].attributes.map((i) => {
+              return {
+                ...i,
+                value: String(i.value),
+              };
+            })
+          : null;
       const { normId, u2uId } = this.getId(input[i].tokenId, collection);
       await this.prisma.nFT.upsert({
         where: {
@@ -171,12 +173,14 @@ export class NFTsCheckProcessor {
           status: TX_STATUS.SUCCESS,
           tokenUri: input[i].tokenUri,
           image: metadataArray[i].image,
-          Trait: {
-            createMany: {
-              data: convertToStringAttr,
-              skipDuplicates: true,
+          ...(convertToStringAttr && {
+            Trait: {
+              createMany: {
+                data: convertToStringAttr,
+                skipDuplicates: true,
+              },
             },
-          },
+          }),
         },
         create: {
           id: normId,
@@ -189,12 +193,14 @@ export class NFTsCheckProcessor {
           collectionId: collection.id,
           image: metadataArray[i].image,
           ...(u2uId && { u2uId }),
-          Trait: {
-            createMany: {
-              data: convertToStringAttr,
-              skipDuplicates: true,
+          ...(convertToStringAttr && {
+            Trait: {
+              createMany: {
+                data: convertToStringAttr,
+                skipDuplicates: true,
+              },
             },
-          },
+          }),
         },
       });
       // }
@@ -240,6 +246,16 @@ export class NFTsCheckProcessor {
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
+
+              const convertToStringAttr =
+                metadata && metadata.attributes
+                  ? metadata.attributes.map((i) => {
+                      return {
+                        ...i,
+                        value: String(i.value),
+                      };
+                    })
+                  : null;
               // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
@@ -256,15 +272,14 @@ export class NFTsCheckProcessor {
                     animationUrl: metadata.animation_url,
                   }),
                   description: metadata.description,
-                  Trait: {
-                    createMany: {
-                      data: metadata.attributes.map((trait) => ({
-                        ...trait,
-                        value: trait.value.toString(),
-                      })),
-                      skipDuplicates: true,
+                  ...(convertToStringAttr && {
+                    Trait: {
+                      createMany: {
+                        data: convertToStringAttr,
+                        skipDuplicates: true,
+                      },
                     },
-                  },
+                  }),
                 },
               });
             }
@@ -299,6 +314,16 @@ export class NFTsCheckProcessor {
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
+              const convertToStringAttr =
+                metadata && metadata.attributes
+                  ? metadata.attributes.map((i) => {
+                      return {
+                        ...i,
+                        value: String(i.value),
+                      };
+                    })
+                  : null;
+              console.log('alo: ', metadata);
               // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
@@ -315,15 +340,14 @@ export class NFTsCheckProcessor {
                     animationUrl: metadata.animation_url,
                   }),
                   description: metadata.description,
-                  Trait: {
-                    createMany: {
-                      data: metadata.attributes.map((trait) => ({
-                        ...trait,
-                        value: trait.value.toString(),
-                      })),
-                      skipDuplicates: true,
+                  ...(convertToStringAttr && {
+                    Trait: {
+                      createMany: {
+                        data: convertToStringAttr,
+                        skipDuplicates: true,
+                      },
                     },
-                  },
+                  }),
                 },
               });
             }
