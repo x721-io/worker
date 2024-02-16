@@ -54,6 +54,7 @@ export class NFTsCheckProcessor {
         collection: true,
       },
     });
+    // console.log(pendingNfts)
     for (let i = 0; i < pendingNfts.length; i++) {
       await this.crawlNftInfoToDbSingle(
         pendingNfts[i],
@@ -363,6 +364,7 @@ export class NFTsCheckProcessor {
     }
   }
   private async crawlNftInfoToDbSingle(tokenId: NFT, collectionId: Collection) {
+    console.log('haha: ', tokenId.txCreationHash);
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
@@ -373,6 +375,7 @@ export class NFTsCheckProcessor {
     else normId = tokenId.id;
     try {
       if (collectionId.type === 'ERC721') {
+        console.log(collectionId.address);
         const { erc721Tokens } = await sdk.Get721NFTs(variables);
         if (erc721Tokens.length > 0) {
           const uri = await this.NftCrawler.getSingleErc721NftData(
@@ -412,7 +415,18 @@ export class NFTsCheckProcessor {
           // }
           return erc721Tokens;
         } else {
-          throw new Error('NO TX FOUND YET');
+          console.error('NO TX FOUND YET');
+          await this.prisma.nFT.update({
+            where: {
+              id_collectionId: {
+                id: tokenId.id,
+                collectionId: collectionId.id,
+              },
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            },
+          });
         }
       } else if (collectionId.type === 'ERC1155') {
         const { erc1155Tokens } = await sdk.Get1155NFTs(variables);
@@ -453,7 +467,18 @@ export class NFTsCheckProcessor {
           // }
           return erc1155Tokens;
         } else {
-          throw new Error('NO TX FOUND YET');
+          console.error('NO TX FOUND YET');
+          await this.prisma.nFT.update({
+            where: {
+              id_collectionId: {
+                id: tokenId.id,
+                collectionId: collectionId.id,
+              },
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            },
+          });
         }
       }
     } catch (err) {
