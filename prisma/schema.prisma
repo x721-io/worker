@@ -95,7 +95,6 @@ model Collection {
   projectId      String?          @unique @db.Uuid
   isU2U          Boolean          @default(true)
   nameSlug       String?
-  isVerified     Boolean?         @default(false)
   category       Category?        @relation(fields: [categoryId], references: [id])
   Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
