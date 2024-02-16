@@ -9,30 +9,36 @@ datasource db {
 }
 
 model User {
-  email         String?          @unique
-  username      String?          @unique
-  signature     String?          @unique
-  signedMessage String?
-  signer        String           @unique
-  publicKey     String?
-  signDate      DateTime?
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @updatedAt
-  avatar        String?
-  id            String           @id @default(uuid()) @db.Uuid
-  acceptedTerms Boolean          @default(false)
-  discordLink   String?
-  facebookLink  String?
-  telegramLink  String?
-  twitterLink   String?
-  webURL        String?
-  coverImage    String?
-  bio           String?
-  shortLink     String?          @unique
-  nftCreator    NFT[]
-  nftCollection UserCollection[]
-  nftsOwnership UserNFT[]
-  UserProject   UserProject[]
+  email                                  String?          @unique
+  username                               String?          @unique
+  signature                              String?          @unique
+  signedMessage                          String?
+  signer                                 String           @unique
+  publicKey                              String?
+  signDate                               DateTime?
+  createdAt                              DateTime         @default(now())
+  updatedAt                              DateTime         @updatedAt
+  avatar                                 String?
+  id                                     String           @id @default(uuid()) @db.Uuid
+  acceptedTerms                          Boolean          @default(false)
+  discordLink                            String?
+  facebookLink                           String?
+  telegramLink                           String?
+  twitterLink                            String?
+  webURL                                 String?
+  coverImage                             String?
+  bio                                    String?
+  shortLink                              String?          @unique
+  accountStatus                          Boolean          @default(false)
+  verifyEmail                            Boolean          @default(false)
+  followers                              Int?             @default(0)
+  following                              Int?             @default(0)
+  nftCreator                             NFT[]
+  nftCollection                          UserCollection[]
+  UserFollow_UserFollow_followerIdToUser UserFollow[]     @relation("UserFollow_followerIdToUser")
+  UserFollow_UserFollow_userIdToUser     UserFollow[]     @relation("UserFollow_userIdToUser")
+  nftsOwnership                          UserNFT[]
+  UserProject                            UserProject[]
 }
 
 model NFT {
@@ -89,6 +95,7 @@ model Collection {
   projectId      String?          @unique @db.Uuid
   isU2U          Boolean          @default(true)
   nameSlug       String?
+  isVerified     Boolean?         @default(false)
   category       Category?        @relation(fields: [categoryId], references: [id])
   Project        Project?         @relation(fields: [projectId], references: [id])
   nfts           NFT[]
@@ -196,6 +203,16 @@ model RoundRangeTime {
   end       DateTime
   Project   Project   @relation(fields: [projectId], references: [id])
   RoundInfo RoundInfo @relation(fields: [roundId], references: [id])
+}
+
+model UserFollow {
+  userId                           String  @db.Uuid
+  followerId                       String  @db.Uuid
+  isFollow                         Boolean @default(true)
+  User_UserFollow_followerIdToUser User    @relation("UserFollow_followerIdToUser", fields: [followerId], references: [id])
+  User_UserFollow_userIdToUser     User    @relation("UserFollow_userIdToUser", fields: [userId], references: [id])
+
+  @@id([userId, followerId])
 }
 
 enum TX_STATUS {
