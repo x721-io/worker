@@ -35,3 +35,40 @@ query GetNFTsHistory1155 ($first: Int!, $skip: Int!, $minPrice: BigInt, $maxPric
     from
   }
 }
+query GetNFTsSelling721 ($first: Int!, $skip: Int!, $collection: String!) {
+  marketEvent721S(
+    where: {event: AskNew, address: $collection}
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    event
+    nftId {
+      id
+    }
+    price
+    to
+    from
+  }
+}
+
+query GetNFTsSelling1155 ($first: Int!, $skip: Int!, $collection: String!) {
+  marketEvent1155S(
+    where: {event: AskNew, address: $collection}
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    event
+    nftId {
+      id
+    }
+    price
+    to
+    from
+  }
+}

@@ -1,6 +1,7 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import {
+  QUEUE_COLLECTION_UTILS,
   QUEUE_NAME_COLLECTION,
   QUEUE_NAME_IPFS,
   QUEUE_NAME_NFT,
@@ -27,6 +28,7 @@ import {
       { name: QUEUE_NAME_PROJECT },
       { name: QUEUE_NAME_TIMER },
       { name: QUEUE_NAME_USER },
+      { name: QUEUE_COLLECTION_UTILS },
     ),
   ],
   exports: [BullModule],

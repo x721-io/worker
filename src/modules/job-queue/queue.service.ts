@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue, JobOptions } from 'bull';
 import {
+  QUEUE_COLLECTION_UTILS,
   QUEUE_NAME_COLLECTION,
   QUEUE_NAME_IPFS,
   QUEUE_NAME_NFT,
@@ -22,6 +23,7 @@ export class QueueService {
 
   constructor(
     @InjectQueue(QUEUE_NAME_COLLECTION) private collectionQueue: Queue,
+    @InjectQueue(QUEUE_COLLECTION_UTILS) private collectionUtilsQueue: Queue,
     @InjectQueue(QUEUE_NAME_NFT) private nftQueue: Queue,
     @InjectQueue(QUEUE_NAME_IPFS) private ipfsQueue: Queue,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
@@ -50,5 +52,9 @@ export class QueueService {
 
   async addUserJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.userQueue, jobType, jobData);
+  }
+
+  async addCollectionUtilsJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.collectionUtilsQueue, jobType, jobData);
   }
 }
