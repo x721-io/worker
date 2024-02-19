@@ -12,6 +12,7 @@ import { QUEUE_COLLECTION_UTILS } from 'src/constants/Job.constant';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { logger } from 'src/commons';
 import { OnModuleInit } from '@nestjs/common';
+import OtherCommon from 'src/commons/Other.common';
 interface FloorPriceProcess {
   address: string;
 }
@@ -29,6 +30,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   @Process('update-floor-price')
   private async updateFloorPrice(job: Job<FloorPriceProcess>) {
     console.log(job.data);
+    await OtherCommon.delay(5000);
     await this.handleUpdateFloorPrice(job.data.address);
   }
 
@@ -37,7 +39,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     await this.handleSyncFloorPrice(); // Run the task once immediately upon service start
   }
 
-  @Cron(CronExpression.EVERY_12_HOURS)
+  @Cron(CronExpression.EVERY_2_HOURS)
   async handleSyncFloorPrice() {
     try {
       const listCollection = await this.prisma.collection.findMany();
