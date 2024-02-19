@@ -9,13 +9,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
 import { QUEUE_COLLECTION_UTILS } from 'src/constants/Job.constant';
-
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { logger } from 'src/commons';
+import { OnModuleInit } from '@nestjs/common';
 interface FloorPriceProcess {
   address: string;
 }
 
 @Processor(QUEUE_COLLECTION_UTILS)
-export class CollectionsUtilsProcessor {
+export class CollectionsUtilsProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
 
   constructor(private readonly prisma: PrismaService) {}
@@ -28,6 +30,27 @@ export class CollectionsUtilsProcessor {
   private async updateFloorPrice(job: Job<FloorPriceProcess>) {
     console.log(job.data);
     await this.handleUpdateFloorPrice(job.data.address);
+  }
+
+  async onModuleInit() {
+    logger.info(`call First time`);
+    await this.handleSyncFloorPrice(); // Run the task once immediately upon service start
+  }
+
+  @Cron(CronExpression.EVERY_12_HOURS)
+  async handleSyncFloorPrice() {
+    try {
+      const listCollection = await this.prisma.collection.findMany();
+      await Promise.all(
+        listCollection.map(async (item) => {
+          await this.handleUpdateFloorPrice(item.address);
+        }),
+      );
+      logger.info(`Sync Data Floor Price All Collection Successfully`);
+      // collection
+    } catch (error) {
+      logger.error(`Sync Data Floor Price: ${JSON.stringify(error)}`);
+    }
   }
 
   async handleUpdateFloorPrice(address: string) {
