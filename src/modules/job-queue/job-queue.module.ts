@@ -13,7 +13,7 @@ import { ProjectProcessor } from './project.processor';
 import { ApiCallerModule } from '../api-caller/api-caller.module';
 import { UserProcessor } from './user.processor';
 import { CollectionsUtilsProcessor } from './collection-utils.processor';
-
+import { MarketplaceStatusProcessor } from './marketplace-status.processor';
 @Module({
   providers: [
     QueueService,
@@ -28,6 +28,7 @@ import { CollectionsUtilsProcessor } from './collection-utils.processor';
     ProjectProcessor,
     UserProcessor,
     CollectionsUtilsProcessor,
+    MarketplaceStatusProcessor,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })

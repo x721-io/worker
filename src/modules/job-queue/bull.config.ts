@@ -8,6 +8,7 @@ import {
   QUEUE_NAME_PROJECT,
   QUEUE_NAME_TIMER,
   QUEUE_NAME_USER,
+  QUEUE_NAME_MARKETPLACE_STATUS,
 } from '../../constants/Job.constant';
 
 @Module({
@@ -29,6 +30,7 @@ import {
       { name: QUEUE_NAME_TIMER },
       { name: QUEUE_NAME_USER },
       { name: QUEUE_COLLECTION_UTILS },
+      { name: QUEUE_NAME_MARKETPLACE_STATUS },
     ),
   ],
   exports: [BullModule],
