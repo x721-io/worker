@@ -73,12 +73,6 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       }
 
       if (lastProcessedTimestamp > 0) {
-        await this.prisma.syncMasterData.create({
-          data: {
-            timestamp: lastProcessedTimestamp,
-            type: CONTRACT_TYPE.ERC721,
-          },
-        });
         await this.prisma.syncMasterData.upsert({
           where: {
             type: CONTRACT_TYPE.ERC721,
@@ -134,12 +128,6 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         }
       }
       if (lastProcessedTimestamp > 0) {
-        // await this.prisma.syncMasterData.create({
-        //   data: {
-        //     timestamp: lastProcessedTimestamp,
-        //     type: CONTRACT_TYPE.ERC1155,
-        //   },
-        // });
         await this.prisma.syncMasterData.upsert({
           where: {
             type: CONTRACT_TYPE.ERC1155,
@@ -197,25 +185,35 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   }
 
   async createMarketplaceStatus721(nft, item, timestamp) {
-    await this.prisma.marketplaceStatus.create({
-      data: {
-        tokenId: nft.id,
-        collectionId: nft.collectionId,
-        quoteToken: item.quoteToken,
-        timestamp,
-        price: this.weiToEther(item.price || 0),
-        priceWei: `${item.price || 0}`,
-        netPrice: this.weiToEther(item.netPrice || 0),
-        netPriceWei: `${item.netPrice || 0}`,
-        event: item.event,
-        quantity: 1,
-        operation: item?.operation,
-        operationId: item?.operationId,
-        txHash: item?.txHash,
-        from: item?.from,
-        askId: item?.id,
-      },
-    });
+    const whereCondition: Prisma.MarketplaceStatusWhereInput = {
+      tokenId: nft.id,
+      collectionId: nft.collectionId,
+    };
+    const existingMarketplaceStatus =
+      await this.prisma.marketplaceStatus.findFirst({
+        where: whereCondition,
+      });
+    if (!existingMarketplaceStatus) {
+      await this.prisma.marketplaceStatus.create({
+        data: {
+          tokenId: nft.id,
+          collectionId: nft.collectionId,
+          quoteToken: item.quoteToken,
+          timestamp,
+          price: this.weiToEther(item.price || 0),
+          priceWei: `${item.price || 0}`,
+          netPrice: this.weiToEther(item.netPrice || 0),
+          netPriceWei: `${item.netPrice || 0}`,
+          event: item.event,
+          quantity: 1,
+          operation: item?.operation,
+          operationId: item?.operationId,
+          txHash: item?.txHash,
+          from: item?.from,
+          askId: item?.id,
+        },
+      });
+    }
   }
 
   async createMarketplaceStatus1155(nft, item, timestamp) {
