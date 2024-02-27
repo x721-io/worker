@@ -103,9 +103,18 @@ export class CommonService {
       // console.log(response.json())
       return response.json();
     } catch (error) {
-      console.error('Fetch failed:');
-      return (await this.getFromIpfs(tokenUri)).data;
-      // Or an appropriate value for a failed fetch
+      console.error('Fetch failed from url, retrying get from ipfs');
+      if (tokenUri.includes('ipfs://')) {
+        try {
+          const url = tokenUri.replace('ipfs://', 'https://ipfs.io/ipfs/');
+          console.log('new url: ', url);
+          const ipfsFetch = await fetch(url);
+          return ipfsFetch.json();
+        } catch (error) {
+          return (await this.getFromIpfs(tokenUri)).data;
+        }
+        // Or an appropriate value for a failed fetch
+      }
     }
   }
 }

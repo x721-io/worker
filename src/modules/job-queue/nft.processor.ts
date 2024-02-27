@@ -504,7 +504,7 @@ export class NFTsCheckProcessor {
     const hash = job.data.txCreation;
     const retry = job.attemptsMade;
     try {
-      if (retry >= parseInt(process.env.MAX_RETRY))
+      if (retry >= parseInt(process.env.MAX_RETRY) && !!hash)
         await this.prisma.nFT.updateMany({
           where: {
             txCreationHash: hash,
