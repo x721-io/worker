@@ -45,21 +45,26 @@ export class NFTsCheckProcessor {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingFailedNft() {
-    console.log('vãi lồn');
     const pendingNfts = await this.prisma.nFT.findMany({
       where: {
         OR: [{ status: TX_STATUS.PENDING }],
       },
       include: {
         collection: true,
+        Trait: true,
       },
     });
-    // console.log(pendingNfts)
     for (let i = 0; i < pendingNfts.length; i++) {
-      await this.crawlNftInfoToDbSingle(
-        pendingNfts[i],
-        pendingNfts[i].collection,
-      );
+      if (
+        pendingNfts[i] &&
+        pendingNfts[i].Trait &&
+        pendingNfts[i].Trait.length <= 0
+      ) {
+        await this.crawlNftInfoToDbSingle(
+          pendingNfts[i],
+          pendingNfts[i].collection,
+        );
+      }
     }
   }
 
