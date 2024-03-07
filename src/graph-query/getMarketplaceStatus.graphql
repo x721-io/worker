@@ -1,0 +1,67 @@
+query GetMarketplaceStatus721($first: Int!, $skip: Int!, $orderDirection: OrderDirection = desc, $timestamp: BigInt = 0) {
+  marketEvent721S(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+    where:{ 
+      timestamp_gt: $timestamp 
+      event_in: [AskNew, AskCancel, Trade]
+    }
+  ) {
+    id
+    event
+    price
+    to
+    from
+    netPrice
+    metadata
+    txHash
+    timestamp
+    quoteToken
+    address
+    nftId {
+      id
+      identifier
+      tokenId
+      txCreation
+      uri
+      createAt
+    }
+  }
+}
+
+query GetMarketplaceStatus1155($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt = 0) {
+  marketEvent1155S(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+        where:{ 
+      timestamp_gt: $timestamp 
+      event_in: [AskNew, AskCancel, Trade]
+    }
+  ) {
+    id
+    event
+    price
+    to
+    from
+    txHash
+    timestamp
+    quoteToken
+    quantity
+    operationId
+    operation
+    netPrice
+    address
+    nftId {
+      id
+      uri
+      txCreation
+      tokenId
+      identifier
+      createAt
+    }
+  }
+}

@@ -265,6 +265,9 @@ class OtherCommon {
         .substring(id.length - 24),
     ).toString();
   }
+  delay(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
 }
 
 export default new OtherCommon();
