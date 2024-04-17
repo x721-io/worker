@@ -1,0 +1,12 @@
+query GetQuoteTokenAccept($first: Int! = 1000, $skip: Int! = 0) {
+  tokens(
+    first: $first
+    skip: $skip
+  ) {
+    id
+    symbol
+    name
+    derivedETH
+    derivedUSD
+  }
+}

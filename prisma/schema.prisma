@@ -264,6 +264,13 @@ model SyncMasterData{
   syncDataStatus Boolean                  @default(true)
 }
 
+model QuoteTokens {
+  address        String             @id @unique
+  symbol         String
+  name           String
+  derivedETH     Float
+  derivedUSD     Float
+}
 
 
 
