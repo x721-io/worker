@@ -9,6 +9,7 @@ import {
   QUEUE_NAME_TIMER,
   QUEUE_NAME_USER,
   QUEUE_NAME_MARKETPLACE_STATUS,
+  QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
 } from '../../constants/Job.constant';
 
 @Module({
@@ -31,6 +32,9 @@ import {
       { name: QUEUE_NAME_USER },
       { name: QUEUE_COLLECTION_UTILS },
       { name: QUEUE_NAME_MARKETPLACE_STATUS },
+      {
+        name: QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+      },
     ),
   ],
   exports: [BullModule],

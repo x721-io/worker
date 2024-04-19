@@ -8,7 +8,8 @@ const config: CodegenConfig = {
   overwrite: true,
   schema: [
     process.env.SUBGRAPH_URL as string,
-    process.env.SUBGRAPH_URL_STAKING as string,  // Use type assertion to ensure non-undefined value
+    process.env.SUBGRAPH_URL_STAKING as string,
+    process.env.SUBGRAPH_URL_DEX as string
   ],
   documents: 'src/**/*.graphql',
   generates: {
