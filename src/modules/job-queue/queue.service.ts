@@ -20,6 +20,8 @@ export class QueueService {
       type: 'fixed', // or 'exponential'
       delay: 5000, // Default delay of 5 seconds between retries
     },
+    removeOnComplete: true,
+    removeOnFail: true,
     // You can add other default settings here
   };
 
