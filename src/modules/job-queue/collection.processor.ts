@@ -31,7 +31,7 @@ export class CollectionsCheckProcessor {
   async handlePendingCollection() {
     const pendingCollections = await this.prisma.collection.findMany({
       where: {
-        OR: [{ status: TX_STATUS.PENDING }, { status: TX_STATUS.FAILED }],
+        OR: [{ status: TX_STATUS.PENDING }],
       },
     });
     for (let i = 0; i < pendingCollections.length; i++) {

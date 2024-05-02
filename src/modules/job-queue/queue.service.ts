@@ -9,6 +9,7 @@ import {
   QUEUE_NAME_PROJECT,
   QUEUE_NAME_USER,
   QUEUE_NAME_MARKETPLACE_STATUS,
+  QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
 } from 'src/constants/Job.constant';
 
 @Injectable()
@@ -19,6 +20,8 @@ export class QueueService {
       type: 'fixed', // or 'exponential'
       delay: 5000, // Default delay of 5 seconds between retries
     },
+    removeOnComplete: true,
+    removeOnFail: true,
     // You can add other default settings here
   };
 
@@ -30,6 +33,7 @@ export class QueueService {
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
     @InjectQueue(QUEUE_NAME_USER) private userQueue: Queue,
     @InjectQueue(QUEUE_NAME_MARKETPLACE_STATUS) private marketplaceQueue: Queue,
+    @InjectQueue(QUEUE_NAME_QUOTE_TOKEN_ACCEPT) private quoteTokenQueue: Queue,
   ) {}
 
   async addJobToQueue(queue: Queue, jobType: string, jobData: any) {
@@ -61,5 +65,8 @@ export class QueueService {
   }
   async addMarketplaceStatusJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.marketplaceQueue, jobType, jobData);
+  }
+  async addQuoteTokenAccessJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.quoteTokenQueue, jobType, jobData);
   }
 }
