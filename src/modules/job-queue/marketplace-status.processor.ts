@@ -58,6 +58,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       let lastProcessedTimestamp = 0;
       // Nếu syncDataStatus là true, tức là quá trình sync đang chạy, không thực hiện gì cả
       if (lastItem && lastItem.syncDataStatus === true) {
+        await this.updateSyncStatus(CONTRACT_TYPE.ERC721, false);
         logger.info('Sync data marketplace status 721s is already running');
         return;
       }
@@ -89,7 +90,6 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           hasMore = false;
         }
       }
-
       if (lastProcessedTimestamp > 0) {
         await this.updateSyncStatus(
           CONTRACT_TYPE.ERC721,
@@ -118,6 +118,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       let lastProcessedTimestamp = 0;
       // Nếu syncDataStatus là true, tức là quá trình sync đang chạy, không thực hiện gì cả
       if (lastItem && lastItem.syncDataStatus === true) {
+        await this.updateSyncStatus(CONTRACT_TYPE.ERC1155, false);
         logger.info('Sync data marketplace status 1155s is already running');
         return;
       }
