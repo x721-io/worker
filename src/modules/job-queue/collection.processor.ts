@@ -11,7 +11,6 @@ import { Processor, Process, OnQueueFailed } from '@nestjs/bull';
 import { Job } from 'bull';
 import { QUEUE_NAME_COLLECTION } from 'src/constants/Job.constant';
 import { Cron, CronExpression } from '@nestjs/schedule';
-
 interface SyncCollection {
   txCreation: string;
   type: 'ERC721' | 'ERC1155';
