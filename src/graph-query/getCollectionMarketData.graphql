@@ -1,0 +1,118 @@
+query GetCollectionsData($collectionAddress: String) {
+  marketEvent1155S(where: {address: $collectionAddress}) {
+    address
+    netPrice
+    price
+    quoteToken
+    to
+    nftId {
+      contract {
+        id
+      }
+    }
+    event
+    quantity
+  }
+  marketEvent721S(where: {address: $collectionAddress}) {
+    id
+    nftId {
+      contract {
+        id
+      }
+    }
+    address
+    price
+    quoteToken
+    event
+    to
+  }
+}
+
+query GetCollectionHolders($collectionAddress: String) {
+  erc1155Balances(
+    where: {contract_: {id: $collectionAddress}}
+  ) {
+    id
+    value
+    contract {
+      id
+    }
+    account {
+      id
+    }
+  }
+}
+
+query GetCountCollectionTokens($collectionAddress: String) {
+  erc1155Tokens(
+    where: {contract_: {id: $collectionAddress}}
+  ) {
+    id
+    tokenId
+    balances {
+      value
+      account {
+        id
+      }
+      contract {
+        id
+      }
+    }
+  }
+  erc721Tokens(
+    where: {contract_: {id: $collectionAddress}}
+  ) {
+    id
+    tokenId
+    owner {
+      id
+    }
+  }
+}
+
+query GetNFTOwnersInfo1155($nftId: String, $contractAddress: String) {
+  erc1155Balances(
+    where: {contract: $contractAddress, token_: {tokenId: $nftId}}
+  ) {
+    value
+    account {
+      id
+    }
+    token {
+      tokenId
+    }
+    contract {
+      id
+    }
+  }
+}
+
+query GetNFTOwnersInfo721($nftId: String, $contractAddress: String) {
+  erc721Tokens(
+    where: {contract: $contractAddress, tokenId: $nftId}
+  ) {
+    id
+    txCreation
+    contract {
+      id
+    }
+    owner {
+      id
+    }
+  }
+}
+
+query ErcContract($id: ID!) {
+  erc1155Contract(id: $id) {
+    id
+    count
+    holderCount
+    volume
+  }
+  erc721Contract(id: $id) {
+    id
+    count
+    holderCount
+    volume
+  }
+}

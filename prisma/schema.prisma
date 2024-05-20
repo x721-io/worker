@@ -39,6 +39,9 @@ model User {
   UserFollow_UserFollow_userIdToUser      UserFollow[]     @relation("UserFollow_userIdToUser")
   nftsOwnership                           UserNFT[]
   UserProject                             UserProject[]
+  isActive                                Boolean          @default(true)
+  metricPoint      BigInt?          @default(0)
+  metricDetail     Json?            @default("{\"Verified\":0,\"Followers\":{\"key\":\"follower_lv0\",\"value\":0,\"point\":0,\"total\":0},\"CollectionMetric\":0,\"VolumeIndividual\":0}")
 }
 
 model NFT {
@@ -61,6 +64,8 @@ model NFT {
   Trait                                   Trait[]
   UserNFT                                 UserNFT[]
   MarketplaceByTokenId                    MarketplaceStatus[] @relation("Marketplace_byId")
+  metricPoint                             BigInt?            @default(0)
+  metricDetail                            Json?              @default("{\"VolumeIndividual\":0,\"UserMetric\":0}")
 
   @@id([id, collectionId])
   @@index([u2uId, collectionId])
@@ -102,7 +107,9 @@ model Collection {
   Project                                 Project?         @relation(fields: [projectId], references: [id])
   nfts                                    NFT[]
   creators                                UserCollection[]
-
+  isActive                                Boolean            @default(true)
+  metricPoint                             BigInt?            @default(0)
+  metricDetail                            Json?              @default("{\"Verified\":0,\"Volume\":{\"key\":\"volume_lv0\",\"value\":\"0\",\"point\":0,\"total\":0},\"TotalUniqueOwner\":{\"key\":\"owner_lv0\",\"value\":\"0\",\"point\":0,\"total\":0},\"TotalItems\":{\"key\":\"item_lv0\",\"value\":0,\"point\":0,\"total\":0},\"Followers\":{\"key\":\"follower_lv0\",\"value\":0,\"point\":0,\"total\":0}}")
   @@index([address], type: Hash)
 }
 
@@ -238,23 +245,24 @@ enum SELL_STATUS {
 }
 
 model MarketplaceStatus {
-  id                                      Int @id @default(autoincrement())
-  tokenId                                 String  @db.VarChar(255)
-  collectionId                            String  @db.Uuid
-  quoteToken                              String?  @db.VarChar(255)
+  id                                      Int       @id @default(autoincrement())
+  tokenId                                 String    @db.VarChar(255)
+  collectionId                            String    @db.Uuid
+  quoteToken                              String?   @db.VarChar(255)
   timestamp                               Int  
   price                                   Float
   priceWei                                String
   netPrice                                Float
   netPriceWei                             String
   event                                   SELL_STATUS
-  quantity                                Int     @default(1)
+  quantity                                Int       @default(1)
   operationId                             String?
   txHash                                  String?
   operation                               String?
   from                                    String?
   askId                                   String?
-  nftById                                 NFT     @relation("Marketplace_byId", fields: [tokenId, collectionId], references: [id, collectionId], map: "marketplace_by_id_fk") 
+  metricPoint                             BigInt?   @default(0)
+  nftById                                 NFT       @relation("Marketplace_byId", fields: [tokenId, collectionId], references: [id, collectionId], map: "marketplace_by_id_fk") 
   @@index([tokenId, collectionId])
 }
 
@@ -265,7 +273,7 @@ model SyncMasterData{
 }
 
 model QuoteTokens {
-  address        String             @id @unique
+  address        String                  @id @unique
   symbol         String
   name           String
   derivedETH     Float

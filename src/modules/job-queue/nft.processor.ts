@@ -19,6 +19,8 @@ import OtherCommon from 'src/commons/Other.common';
 import { ApiCallerService } from '../api-caller/api-caller.service';
 import { validate as isValidUUID } from 'uuid';
 import { logger } from 'src/commons';
+import MetricCommon from 'src/commons/Metric.common';
+import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
@@ -95,10 +97,10 @@ export class NFTsCheckProcessor {
 
   @Process('nft-create')
   private async checkNFTStatus(job: Job<any>) {
-    const { txCreation: hash, type } = job.data;
+    const { txCreation: hash, type, collectionId } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    console.log('let see: ', hash, type);
+    // console.log('let see: ', hash, type);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
       txCreation: hash,
     };
@@ -115,6 +117,12 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          // Update Metric Point
+          await MetricCommon.handleMetric(
+            TypeCategory.Collection,
+            MetricCategory.CollectionMetric,
+            collectionId,
+          );
           return response;
         } else {
           throw new Error('NO TX FOUND YET');
@@ -130,6 +138,12 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          // Update Metric Point
+          await MetricCommon.handleMetric(
+            TypeCategory.Collection,
+            MetricCategory.CollectionMetric,
+            collectionId,
+          );
           return response;
         } else {
           throw new Error('NO TX FOUND YET');

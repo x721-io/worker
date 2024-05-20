@@ -13,6 +13,8 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { logger } from 'src/commons';
 import { OnModuleInit } from '@nestjs/common';
 import OtherCommon from 'src/commons/Other.common';
+import MetricCommon from 'src/commons/Metric.common';
+import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 interface FloorPriceProcess {
   address: string;
 }
@@ -35,8 +37,40 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   }
 
   async onModuleInit() {
-    logger.info(`call First time`);
-    await this.handleSyncFloorPrice(); // Run the task once immediately upon service start
+    logger.info(`call First time: QUEUE_COLLECTION_UTILS `);
+    await Promise.all([
+      this.handleSyncMetricPoint(),
+      this.handleSyncFloorPrice(),
+    ]);
+    // await this.handleSyncFloorPrice(); // Run the task once immediately upon service start
+  }
+
+  async handleSyncMetricPoint() {
+    try {
+      const listCollection = await this.prisma.collection.findMany({
+        where: {
+          NOT: {
+            address: {
+              in: [process.env.BASE_ADDR_1155, process.env.BASE_ADDR_721],
+            },
+          },
+        },
+      });
+      await Promise.all(
+        listCollection.map(async (item) => {
+          if (item.address) {
+            await MetricCommon.handleMetric(
+              TypeCategory.Collection,
+              MetricCategory.CollectionMetric,
+              item.id,
+            );
+          }
+        }),
+      );
+      logger.info(`Sync Data Metric Collection Successfully`);
+    } catch (error) {
+      logger.error(`Sync Data Floor Price: ${JSON.stringify(error)}`);
+    }
   }
 
   @Cron(CronExpression.EVERY_2_HOURS)
