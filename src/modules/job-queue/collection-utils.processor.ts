@@ -1,4 +1,3 @@
-// import { Job } from 'kue';
 import { GraphQLClient } from 'graphql-request';
 import {
   GetNfTsSelling1155QueryVariables,
@@ -15,10 +14,30 @@ import { OnModuleInit } from '@nestjs/common';
 import OtherCommon from 'src/commons/Other.common';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
+import { CONTRACT_TYPE, Prisma, TX_STATUS } from '@prisma/client';
+import subgraphServiceCommon from '../helper/subgraph-helper.service';
 interface FloorPriceProcess {
   address: string;
 }
 
+interface itemSubgraph {
+  tokenURI: string;
+  tokenID: string;
+  id: string;
+  balance?: string;
+  createdAt: string;
+}
+
+interface listItemSubgraph {
+  items?: itemSubgraph[];
+}
+
+interface responseIPFS {
+  image?: string;
+  image_url?: string;
+  name?: string;
+  fileUrls?: any[];
+}
 @Processor(QUEUE_COLLECTION_UTILS)
 export class CollectionsUtilsProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
@@ -42,7 +61,6 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       this.handleSyncMetricPoint(),
       this.handleSyncFloorPrice(),
     ]);
-    // await this.handleSyncFloorPrice(); // Run the task once immediately upon service start
   }
 
   async handleSyncMetricPoint() {
@@ -69,10 +87,86 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       );
       logger.info(`Sync Data Metric Collection Successfully`);
     } catch (error) {
-      logger.error(`Sync Data Floor Price: ${JSON.stringify(error)}`);
+      logger.error(
+        `Sync Data Metric Collection Successfully: ${JSON.stringify(error)}`,
+      );
     }
   }
 
+  // @Cron(CronExpression.EVERY_10_SECONDS)
+  async handleSyncCollectionExtend() {
+    try {
+      const collectionExtend = await this.getCollectionsToExtend();
+      const getIsSync = await this.checkIsSync();
+
+      if (getIsSync) {
+        logger.info('Sync data extend collections is already running');
+        return;
+      }
+      for (const collection of collectionExtend) {
+        await this.prisma.collection.update({
+          where: {
+            id: collection.id,
+          },
+          data: {
+            isSync: true,
+          },
+        });
+        let skip = 0;
+        const first = 1000;
+        let hasMore = true;
+        let lastProcessedTimestamp = 0;
+        while (hasMore) {
+          const resultSubgraphQuery: listItemSubgraph =
+            await subgraphServiceCommon.subgraphQuery(
+              collection.subgraphUrl,
+              collection.type,
+              skip,
+              first,
+              collection?.lastTimeSync,
+            );
+          if (resultSubgraphQuery?.items?.length > 0) {
+            for (const item of resultSubgraphQuery?.items) {
+              if (subgraphServiceCommon.isLink(item.tokenURI)) {
+                const resultIPFS: responseIPFS =
+                  await subgraphServiceCommon.getDetailFromIPFS(item.tokenURI);
+                const ipfsPath = resultIPFS.image ?? resultIPFS.image_url;
+                const name = resultIPFS.name ?? item.tokenID;
+                const creatorId =
+                  collection.creators &&
+                  collection.creators[0] &&
+                  collection.creators[0]?.userId;
+
+                await this.upsertNFT(
+                  item,
+                  collection.id,
+                  name,
+                  item.tokenURI,
+                  ipfsPath,
+                  creatorId,
+                );
+                await this.upsertUserNFT(item, collection.id, creatorId);
+              }
+            }
+            (lastProcessedTimestamp = parseInt(
+              resultSubgraphQuery.items[resultSubgraphQuery.items.length - 1]
+                .createdAt,
+            )),
+              await this.updateCollectionSyncStatus(
+                collection.id,
+                lastProcessedTimestamp,
+              );
+            skip += first;
+          } else {
+            hasMore = false;
+          }
+        }
+      }
+      logger.info(`Sync All Collection Extend Successfully`);
+    } catch (error) {
+      logger.error(`handleSyncCollectionExtend: ${error}`);
+    }
+  }
   @Cron(CronExpression.EVERY_2_HOURS)
   async handleSyncFloorPrice() {
     try {
@@ -167,5 +261,96 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       },
     });
     return true;
+  }
+
+  async checkIsSync(): Promise<boolean> {
+    const countIsSync = await this.prisma.collection.count({
+      where: {
+        flagExtend: true,
+        isSync: true,
+      },
+    });
+    if (countIsSync > 0) {
+      return true;
+    }
+    return false;
+  }
+
+  async getCollectionsToExtend() {
+    return await this.prisma.collection.findMany({
+      where: {
+        AND: [{ flagExtend: true }, { isSync: false }],
+      },
+      include: {
+        creators: {
+          select: { userId: true },
+        },
+      },
+    });
+  }
+
+  async markCollectionAsSyncing(collectionId: string) {
+    await this.prisma.collection.update({
+      where: { id: collectionId },
+      data: { isSync: true },
+    });
+  }
+
+  async updateCollectionSyncStatus(
+    collectionId: string,
+    lastProcessedTimestamp: number,
+  ) {
+    await this.prisma.collection.update({
+      data: {
+        isSync: false,
+        lastTimeSync: lastProcessedTimestamp,
+      },
+      where: { id: collectionId },
+    });
+  }
+
+  async upsertUserNFT(item, collectionId, creatorId) {
+    await this.prisma.userNFT.upsert({
+      create: {
+        nftId: item.id,
+        collectionId,
+        quantity: item.balance ? parseInt(item.balance) : 1,
+        userId: creatorId,
+      },
+      update: {
+        quantity: item.balance ? parseInt(item.balance) : 1,
+      },
+      where: {
+        userId_nftId_collectionId: {
+          nftId: item.id,
+          collectionId,
+          userId: creatorId,
+        },
+      },
+    });
+  }
+
+  async upsertNFT(item, collectionId, name, tokenUri, ipfsPath, creatorId) {
+    await this.prisma.nFT.upsert({
+      where: { id_collectionId: { id: item.id, collectionId } },
+      create: {
+        id: item.id,
+        name,
+        tokenUri,
+        status: TX_STATUS.SUCCESS,
+        txCreationHash: '',
+        creatorId,
+        collectionId,
+        image: ipfsPath,
+      },
+      update: {
+        name,
+        tokenUri,
+        status: TX_STATUS.SUCCESS,
+        txCreationHash: '',
+        creatorId,
+        image: ipfsPath,
+      },
+    });
   }
 }

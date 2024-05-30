@@ -5,13 +5,16 @@ import { encode } from 'punycode';
 import { ApiCallerService } from 'src/modules/api-caller/api-caller.service';
 import { HttpService } from '@nestjs/axios';
 import logger from './Logger.common';
+import { gql, GraphQLClient } from 'graphql-request';
+import { CONTRACT_TYPE } from '@prisma/client';
+import axios from 'axios';
 
 type RecursivePartial<T> = {
   [P in keyof T]?: T[P] extends (infer U)[]
     ? RecursivePartial<U>[]
     : T[P] extends object
-    ? RecursivePartial<T[P]>
-    : T[P];
+      ? RecursivePartial<T[P]>
+      : T[P];
 };
 
 type PrismaSelect<T> = {
