@@ -1,0 +1,34 @@
+query getBalances1155($tokenId: ID!) {
+    userBalances(where: { token_: { id: $tokenId } }) {
+    lastUpdated
+    id
+    balance
+    burnQuantity
+    owner {
+        id
+    }
+    token {
+        id
+        tokenID
+        tokenURI
+        balance
+      }
+  }
+}
+
+query getItems1155($first: Int = 1000, $skip: Int = 0, $createdAt: BigInt = 0) {
+  items(
+    first: $first
+    skip: $skip
+    orderBy: createdAt
+    where: {
+      createdAt_gte : $createdAt
+    }
+  ) {
+    tokenURI
+    tokenID
+    id
+    balance
+    createdAt
+  }
+}
