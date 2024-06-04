@@ -93,7 +93,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     }
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncCollectionExtend() {
     try {
       const collectionExtend = await this.getCollectionsToExtend();
