@@ -1,8 +1,13 @@
-query getBalances721($tokenId: BigInt!) {
-  items(where: { tokenID: $tokenId }) {
+query getUserBalance721($first: Int = 1000, $skip: Int = 0, $timestamp: BigInt = 0) {
+  items(
+    first: $first
+    skip: $skip
+    orderBy: createdAt
+  ) {
     tokenURI
     tokenID
     id
+    createdAt
     owner {
       id
     }
@@ -24,3 +29,4 @@ query getItems721($first: Int = 1000, $skip: Int = 0, $createdAt: BigInt = 0) {
     createdAt
   }
 }
+

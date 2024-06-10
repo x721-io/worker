@@ -14,12 +14,18 @@ import { OnModuleInit } from '@nestjs/common';
 import OtherCommon from 'src/commons/Other.common';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
-import { CONTRACT_TYPE, Prisma, TX_STATUS } from '@prisma/client';
+import {
+  CONTRACT_TYPE,
+  Prisma,
+  TX_STATUS,
+  Owner,
+  SubgraphOwnerExtend,
+} from '@prisma/client';
 import subgraphServiceCommon from '../helper/subgraph-helper.service';
+import { UnifiedObject } from '../helper/subgraph-helper.object';
 interface FloorPriceProcess {
   address: string;
 }
-
 interface itemSubgraph {
   tokenURI: string;
   tokenID: string;
@@ -27,17 +33,30 @@ interface itemSubgraph {
   balance?: string;
   createdAt: string;
 }
-
 interface listItemSubgraph {
   items?: itemSubgraph[];
 }
-
 interface responseIPFS {
   image?: string;
   image_url?: string;
   name?: string;
   fileUrls?: any[];
 }
+
+interface owner {
+  id: string;
+}
+
+interface Balance {
+  stakedAmount?: string;
+  lastUpdated?: string;
+  id?: string;
+  burnQuantity?: string;
+  balance?: string;
+  owner?: owner;
+  token?: itemSubgraph;
+}
+
 @Processor(QUEUE_COLLECTION_UTILS)
 export class CollectionsUtilsProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
@@ -58,8 +77,9 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   async onModuleInit() {
     logger.info(`call First time: QUEUE_COLLECTION_UTILS `);
     await Promise.all([
-      this.handleSyncMetricPoint(),
-      this.handleSyncFloorPrice(),
+      // this.handleSyncMetricPoint(),
+      // this.handleSyncFloorPrice(),
+      this.crawlerOwnerExtend(),
     ]);
   }
 
@@ -92,8 +112,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       );
     }
   }
-
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncCollectionExtend() {
     try {
       const collectionExtend = await this.getCollectionsToExtend();
@@ -118,7 +137,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
         let lastProcessedTimestamp = 0;
         while (hasMore) {
           const resultSubgraphQuery: listItemSubgraph =
-            await subgraphServiceCommon.subgraphQuery(
+            await subgraphServiceCommon.subgraphQueryItems(
               collection.subgraphUrl,
               collection.type,
               skip,
@@ -350,6 +369,194 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
         txCreationHash: '',
         creatorId,
         image: ipfsPath,
+      },
+    });
+  }
+
+  // async crawlerOwnerExtend() {
+  //   try {
+  //     const subgraphExtend = await this.prisma.subgraphOwnerExtend.findMany();
+  //     for (const owner of subgraphExtend) {
+  //       await this.prisma.subgraphOwnerExtend.update({
+  //         where: {
+  //           id: owner.id,
+  //         },
+  //         data: {
+  //           isSync: true,
+  //         },
+  //       });
+  //       let skip = 0;
+  //       const first = 1000;
+  //       let hasMore = true;
+  //       let lastProcessedTimestamp = 0;
+  //       while (hasMore) {
+  //         const resultSubgraphQuery: UnifiedObject[] =
+  //           await subgraphServiceCommon.subgraphQueryOwner(
+  //             owner.subgraphUrl,
+  //             owner.type,
+  //             skip,
+  //             first,
+  //             owner.lastTimeSync,
+  //           );
+  //         if (resultSubgraphQuery && resultSubgraphQuery?.length > 0) {
+  //           for (const item of resultSubgraphQuery) {
+  //             let dataCreate: any = {};
+  //             let dataUpdate: Prisma.ownerUpdateInput = {};
+  //             if (owner?.type == CONTRACT_TYPE.ERC1155) {
+  //               dataCreate = {
+  //                 id: item?.id,
+  //                 quantity: parseInt(item?.balance || `0`),
+  //                 tokenId: item?.token?.id,
+  //                 ownerId: item?.owner?.id,
+  //                 timestamp: parseInt(item?.lastUpdated || `0`),
+  //               };
+  //               dataUpdate = {
+  //                 quantity: parseInt(item?.balance || `0`),
+  //                 timestamp: parseInt(item?.lastUpdated || `0`),
+  //               };
+  //             } else {
+  //               dataCreate = {
+  //                 id: item?.id,
+  //                 quantity: 1,
+  //                 tokenId: item?.tokenID,
+  //                 ownerId: item?.owner?.id,
+  //               };
+  //               dataUpdate = {
+  //                 timestamp: parseInt(item?.lastUpdated || `0`),
+  //                 ownerId: item?.owner?.id,
+  //               };
+  //             }
+  //             await this.prisma.owner.upsert({
+  //               create: dataCreate,
+  //               update: dataUpdate,
+  //               where: {
+  //                 id: item?.id,
+  //               },
+  //             });
+  //           }
+  //           lastProcessedTimestamp = parseInt(
+  //             resultSubgraphQuery[resultSubgraphQuery.length - 1].lastUpdated ||
+  //               `0`,
+  //           );
+  //           skip += first;
+  //         } else {
+  //           hasMore = false;
+  //         }
+  //       }
+  //       await this.prisma.subgraphOwnerExtend.update({
+  //         where: {
+  //           id: owner?.id,
+  //         },
+  //         data: {
+  //           lastTimeSync: lastProcessedTimestamp,
+  //           isSync: false,
+  //         },
+  //       });
+  //     }
+  //     logger.info('Crawl Data Owner Collection Extends Success');
+  //   } catch (error) {
+  //     console.log(error);
+  //     logger.error(
+  //       `Crawl Data Owner Collection Extends failed : ${JSON.stringify(error)}`,
+  //     );
+  //   }
+  // }
+  async crawlerOwnerExtend() {
+    try {
+      const subgraphExtend = await this.prisma.subgraphOwnerExtend.findMany();
+      for (const owner of subgraphExtend) {
+        await this.processOwner(owner);
+      }
+      logger.info('Crawl Data Owner Collection Extends Success');
+    } catch (error) {
+      console.log(error);
+      logger.error(
+        `Crawl Data Owner Collection Extends failed : ${JSON.stringify(error)}`,
+      );
+    }
+  }
+
+  async processOwner(owner: SubgraphOwnerExtend) {
+    await this.prisma.subgraphOwnerExtend.update({
+      where: {
+        id: owner.id,
+      },
+      data: {
+        isSync: true,
+      },
+    });
+
+    let skip = 0;
+    const first = 1000;
+    let hasMore = true;
+    let lastProcessedTimestamp = 0;
+
+    while (hasMore) {
+      const resultSubgraphQuery: UnifiedObject[] =
+        await subgraphServiceCommon.subgraphQueryOwner(
+          owner.subgraphUrl,
+          owner.type,
+          skip,
+          first,
+          owner.lastTimeSync,
+        );
+
+      if (resultSubgraphQuery && resultSubgraphQuery.length > 0) {
+        for (const item of resultSubgraphQuery) {
+          let dataCreate: any = {};
+          let dataUpdate: Prisma.OwnerUpdateInput = {};
+
+          if (owner.type == CONTRACT_TYPE.ERC1155) {
+            dataCreate = {
+              id: item.id,
+              quantity: parseInt(item.balance || '0'),
+              tokenId: item.token.id,
+              ownerId: item.owner.id,
+              timestamp: parseInt(item.lastUpdated || '0'),
+            };
+            dataUpdate = {
+              quantity: parseInt(item.balance || '0'),
+              timestamp: parseInt(item.lastUpdated || '0'),
+            };
+          } else {
+            dataCreate = {
+              id: item.id,
+              quantity: 1,
+              tokenId: item.tokenID,
+              ownerId: item.owner.id,
+            };
+            dataUpdate = {
+              timestamp: parseInt(item.lastUpdated || '0'),
+              ownerId: item.owner.id,
+            };
+          }
+
+          await this.prisma.owner.upsert({
+            create: dataCreate,
+            update: dataUpdate,
+            where: {
+              id: item.id,
+            },
+          });
+        }
+
+        lastProcessedTimestamp = parseInt(
+          resultSubgraphQuery[resultSubgraphQuery.length - 1].lastUpdated ||
+            '0',
+        );
+        skip += first;
+      } else {
+        hasMore = false;
+      }
+    }
+
+    await this.prisma.subgraphOwnerExtend.update({
+      where: {
+        id: owner.id,
+      },
+      data: {
+        lastTimeSync: lastProcessedTimestamp,
+        isSync: false,
       },
     });
   }

@@ -3,21 +3,23 @@ import { CONTRACT_TYPE } from '@prisma/client';
 import { gql, GraphQLClient } from 'graphql-request';
 import {
   getSdk as getSdk1155,
-  GetBalances1155QueryVariables,
+  GetUserBalance1155QueryVariables,
   GetItems1155QueryVariables,
 } from 'src/generated/Template1155/graphql';
 import {
   getSdk as getSdk721,
-  GetBalances721QueryVariables,
+  GetUserBalance721QueryVariables,
   GetItems721QueryVariables,
 } from 'src/generated/Template721/graphql';
 import axios from 'axios';
 import { logger } from 'src/commons';
+import { time } from 'console';
+import { UnifiedObject } from './subgraph-helper.object';
 
 class subgraphServiceCommon {
   apiService: ApiCallerService;
 
-  async subgraphQuery(
+  async subgraphQueryItems(
     url: string,
     type: CONTRACT_TYPE,
     skip: number,
@@ -33,7 +35,7 @@ class subgraphServiceCommon {
       return result;
     } catch (error) {
       // console.error(error);
-      logger.error(`subgraphQuery: ${error}`);
+      logger.error(`getDetailFromIPFS: ${error}`);
     }
   }
 
@@ -98,6 +100,78 @@ class subgraphServiceCommon {
       return reponse;
     } catch (error) {
       logger.error(`getSubgraphItems1155: ${error}`);
+    }
+  }
+  async subgraphQueryOwner(
+    url: string,
+    type: CONTRACT_TYPE,
+    skip: number,
+    first: number,
+    timestamp: number,
+  ) {
+    try {
+      if (!url) return;
+      if (type == CONTRACT_TYPE.ERC1155) {
+        const result = await this.getSubgraphOwner1155(
+          url,
+          skip,
+          first,
+          timestamp,
+        );
+        return result?.userBalances as unknown as UnifiedObject[];
+      } else {
+        const result = await this.getSubgraphOwner721(
+          url,
+          skip,
+          first,
+          timestamp,
+        );
+        return result?.items as unknown as UnifiedObject[];
+      }
+    } catch (error) {
+      logger.error(`getDetailFromIPFS: ${error}`);
+    }
+  }
+
+  async getSubgraphOwner1155(
+    url: string,
+    skip: number,
+    first: number,
+    timestamp: number,
+  ) {
+    try {
+      const client = new GraphQLClient(url);
+      const sdk = getSdk1155(client);
+      const variables: GetUserBalance1155QueryVariables = {
+        skip: skip,
+        first: first,
+        timestamp: timestamp,
+      };
+      const reponse = await sdk.getUserBalance1155(variables);
+      return reponse;
+    } catch (error) {
+      logger.error(`getSubgraphOwner1155: ${error}`);
+    }
+  }
+
+  async getSubgraphOwner721(
+    url: string,
+    skip: number,
+    first: number,
+    timestamp: number,
+  ) {
+    try {
+      const client = new GraphQLClient(url);
+      const sdk = getSdk721(client);
+      const variables: GetUserBalance721QueryVariables = {
+        skip: skip,
+        first: first,
+        timestamp: timestamp,
+      };
+      const reponse = await sdk.getUserBalance721(variables);
+      return reponse;
+    } catch (error) {
+      logger.error(`getSubgraphOwner721: ${error}`);
     }
   }
 }

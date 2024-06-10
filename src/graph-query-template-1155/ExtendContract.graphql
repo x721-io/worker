@@ -1,18 +1,25 @@
-query getBalances1155($tokenId: ID!) {
-    userBalances(where: { token_: { id: $tokenId } }) {
+query getUserBalance1155($first: Int = 1000, $skip: Int = 0, $timestamp: BigInt = 0) {
+  userBalances(
+    first: $first
+    skip: $skip
+    orderBy: lastUpdated
+    where:{
+      lastUpdated_gte: $timestamp
+    }
+  ) {
+    stakedAmount
     lastUpdated
     id
-    balance
     burnQuantity
+    balance
     owner {
-        id
+      id
     }
     token {
-        id
-        tokenID
-        tokenURI
-        balance
-      }
+      tokenURI
+      tokenID
+      id
+    }
   }
 }
 

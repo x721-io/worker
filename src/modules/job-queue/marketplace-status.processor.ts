@@ -24,10 +24,10 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
 
   async onModuleInit() {
     logger.info(`call First time QUEUE_NAME_MARKETPLACE_STATUS`); // Run the task once immediately upon service start
-    await this.handleSyncMarketPlaceStatus();
+    // await this.handleSyncMarketPlaceStatus();
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async callEach10SecondSyncMarketplaceStatus() {
     try {
       logger.info(`call per 10 seconds`); // Run the task once immediately upon service start
