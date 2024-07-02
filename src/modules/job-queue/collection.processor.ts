@@ -11,6 +11,9 @@ import { Processor, Process, OnQueueFailed } from '@nestjs/bull';
 import { Job } from 'bull';
 import { QUEUE_NAME_COLLECTION } from 'src/constants/Job.constant';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import subgraphServiceCommon from '../helper/subgraph-helper.service';
+import { RedisSubscriberService } from './redis.service';
+import { logger } from 'src/commons';
 interface SyncCollection {
   txCreation: string;
   type: 'ERC721' | 'ERC1155';
@@ -20,7 +23,10 @@ interface SyncCollection {
 export class CollectionsCheckProcessor {
   private readonly endpoint = process.env.SUBGRAPH_URL;
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly redisService: RedisSubscriberService,
+  ) {}
 
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
@@ -133,10 +139,46 @@ export class CollectionsCheckProcessor {
             status: TX_STATUS.FAILED,
           },
         });
-      console.log(`Updated status to FAILED for txCreationHash: ${hash}`);
+      logger.info(`Updated status to FAILED for txCreationHash: ${hash}`);
     } catch (prismaError) {
-      console.error(
-        `Error updating status in database: ${prismaError.message}`,
+      logger.error(
+        `Error updating status in database: ${JSON.stringify(prismaError)}`,
+      );
+    }
+  }
+  @Cron(CronExpression.EVERY_10_SECONDS)
+  async handleCountExternalCollection() {
+    try {
+      const externalCollections = await this.prisma.collection.findMany({
+        where: {
+          flagExtend: true,
+        },
+        select: {
+          id: true,
+          address: true,
+        },
+      });
+
+      for (const collection of externalCollections) {
+        const { totalNftExternal, totalOwnerExternal } =
+          await subgraphServiceCommon.getAllCollectionExternal(
+            collection.address,
+          );
+        const key = `External-${collection.address}`;
+        this.redisService.set(
+          `session:${key}`,
+          {
+            address: collection.address,
+            totalNft: totalNftExternal.toString(),
+            totalOwner: totalOwnerExternal.toString(),
+          },
+          604800,
+        );
+      }
+      logger.info('handleExternalCollection successful');
+    } catch (error) {
+      logger.error(
+        `HandleExternalCollection Fail 10 seconds: ${JSON.stringify(error)}`,
       );
     }
   }

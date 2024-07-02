@@ -3,19 +3,24 @@ import { CONTRACT_TYPE } from '@prisma/client';
 import { gql, GraphQLClient } from 'graphql-request';
 import {
   getSdk as getSdk1155,
-  GetBalances1155QueryVariables,
   GetItems1155QueryVariables,
 } from 'src/generated/Template1155/graphql';
 import {
   getSdk as getSdk721,
-  GetBalances721QueryVariables,
   GetItems721QueryVariables,
 } from 'src/generated/Template721/graphql';
+import {
+  getSdk as getSdkExternal,
+  ErcContractExternalQuery,
+  ErcContractExternalQueryVariables,
+} from 'src/generated/SubgraphExternal/graphql';
 import axios from 'axios';
 import { logger } from 'src/commons';
 
 class subgraphServiceCommon {
   apiService: ApiCallerService;
+  private readonly DeadAddress = '0x000000000000000000000000000000000000dead';
+  private readonly ZeroAddress = '0x0000000000000000000000000000000000000000';
 
   async subgraphQuery(
     url: string,
@@ -98,6 +103,64 @@ class subgraphServiceCommon {
       return reponse;
     } catch (error) {
       logger.error(`getSubgraphItems1155: ${error}`);
+    }
+  }
+  async getCollectionCountExternal(
+    contract: string,
+    page?: number,
+    limit?: number,
+  ): Promise<ErcContractExternalQuery> {
+    const client = new GraphQLClient(
+      process.env.SUBGRAPH_EXTERNAL_URL as string,
+    );
+    const sdk = getSdkExternal(client);
+    const variables: ErcContractExternalQueryVariables = {
+      contract: contract,
+      page: page,
+      limit: limit,
+    };
+    return await sdk.ErcContractExternal(variables);
+  }
+
+  async getAllCollectionExternal(contract: string) {
+    try {
+      let skip = 0;
+      const first = 1000;
+      let hasMore = true;
+      let totalNftExternal = 0;
+      const uniqueOwners = new Set();
+      while (hasMore) {
+        const resultTotalExternal = await this.getCollectionCountExternal(
+          contract,
+          skip,
+          first,
+        );
+        const { erc721Tokens = [], erc1155Tokens = [] } = resultTotalExternal;
+        if (erc721Tokens?.length > 0 || erc1155Tokens?.length > 0) {
+          totalNftExternal += [...erc721Tokens, ...erc1155Tokens].length || 0;
+          erc721Tokens.forEach((token) => {
+            if (token.owner && token.owner != this.DeadAddress) {
+              uniqueOwners.add(token.owner);
+            }
+          });
+          // Process ERC-1155 tokens
+          erc1155Tokens.forEach((token) => {
+            token.owner.forEach((owner) => {
+              if (owner.owner && owner.owner != this.DeadAddress)
+                uniqueOwners.add(owner.owner);
+            });
+          });
+          skip += first;
+        } else {
+          hasMore = false;
+        }
+      }
+      return {
+        totalNftExternal,
+        totalOwnerExternal: uniqueOwners.size,
+      };
+    } catch (error) {
+      console.log('getAllCollectionExternal', error);
     }
   }
 }
