@@ -6,7 +6,7 @@ dotenvConfig();
 @Injectable()
 export class RedisSubscriberService implements OnModuleInit {
   private redisClient: Redis;
-  private redisGetSet: Redis;
+  public redisGetSet: Redis;
 
   constructor(private queueService: QueueService) {
     this.redisClient = new Redis({
