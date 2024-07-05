@@ -92,7 +92,7 @@ export class ProjectProcessor {
     while (continueFetching) {
       try {
         const response = await axios.get(
-          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/11899589-b0f8-4e7f-a577-0d3ce5855fa2/whilelists',
+          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/11899589-b0f8-4e7f-a577-0d3ce5855fa2/whitelist-users',
           {
             params: { limit: 2, cursor: lastId },
           },
