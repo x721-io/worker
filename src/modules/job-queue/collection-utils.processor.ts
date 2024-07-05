@@ -266,8 +266,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   async checkIsSync(): Promise<boolean> {
     const countIsSync = await this.prisma.collection.count({
       where: {
-        flagExtend: true,
-        isSync: true,
+        AND: [{ flagExtend: true }, { isSync: true }],
       },
     });
     if (countIsSync > 0) {
