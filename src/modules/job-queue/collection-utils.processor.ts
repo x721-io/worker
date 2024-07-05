@@ -101,6 +101,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
 
       if (getIsSync) {
         logger.info('Sync data extend collections is already running');
+        await this.handleSetCollectionExternal();
         return;
       }
       for (const collection of collectionExtend) {
@@ -164,6 +165,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       }
       logger.info(`Sync All Collection Extend Successfully`);
     } catch (error) {
+      await this.handleSetCollectionExternal();
       logger.error(`handleSyncCollectionExtend: ${error}`);
     }
   }
@@ -351,5 +353,20 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
         image: ipfsPath,
       },
     });
+  }
+
+  async handleSetCollectionExternal() {
+    try {
+      await this.prisma.collection.updateMany({
+        where: {
+          flagExtend: true,
+        },
+        data: {
+          isSync: false,
+        },
+      });
+    } catch (error) {
+      logger.error(`handleSyncCollectionExtend: ${error}`);
+    }
   }
 }
