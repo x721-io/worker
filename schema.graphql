@@ -432,7 +432,6 @@ type DirectPurchase @entity {
   buyOrderPaymentAmount: BigInt
   buyOrderNftAmount: BigInt
   buyOrderData: Bytes
-
   nftId: BigInt
   nftAddress: Bytes
 }

@@ -5,6 +5,11 @@ import { InjectQueue, Process, Processor } from '@nestjs/bull';
 import { Job, Queue } from 'bull';
 import { ethers } from 'ethers';
 import { abi as roundAbi } from 'abis/Round.json';
+import { abi as MemetaverseABI } from 'abis/MemetaverseRound.json';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { RedisSubscriberService } from './redis.service';
+import axios from 'axios';
+import { MemetaverseAddr } from 'src/constants/web3Const/address';
 
 interface ConfigRound {
   id: string;
@@ -14,6 +19,7 @@ interface ConfigRound {
 export class ProjectProcessor {
   constructor(
     private readonly prisma: PrismaService,
+    private readonly redisClient: RedisSubscriberService,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
   ) {}
   private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
@@ -67,6 +73,78 @@ export class ProjectProcessor {
       await tx.wait();
     } catch (err) {
       console.error(err);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async addWhitelist() {
+    // TODO: Fetch data
+    // TODO: save last whitelisted to redis
+    // TODO: call smartcontract to whitelist
+    let lastId = await this.redisClient.redisGetSet.get('lastFetchedId');
+    let continueFetching = true;
+    console.log('last id: ', lastId);
+    if (!lastId) {
+      lastId = null;
+    }
+
+    const addresses = [];
+    while (continueFetching) {
+      try {
+        const response = await axios.get(
+          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/11899589-b0f8-4e7f-a577-0d3ce5855fa2/whitelist-users',
+          {
+            params: { limit: 2, cursor: lastId },
+          },
+        );
+        const data = response.data;
+
+        if (data.rows.length > 0) {
+          const filteredData = (data.rows as any[]).filter(
+            (item) => item.id !== lastId,
+          );
+          addresses.push(...filteredData);
+
+          lastId = data.rows[data.rows.length - 1].id;
+          await this.redisClient.set(
+            'lastFetchedId',
+            lastId,
+            Number.MAX_SAFE_INTEGER,
+          );
+          if (!data.pageInfo.hasNextPage || data.rows.length === 1) {
+            continueFetching = false;
+            await this.redisClient.set(
+              'lastFetchedId',
+              parseInt(lastId) + 1,
+              Number.MAX_SAFE_INTEGER,
+            );
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        throw new Error('failed');
+      }
+    }
+    console.log('filtered data: ', addresses);
+
+    try {
+      const stakingContract = new ethers.Contract(
+        MemetaverseAddr,
+        MemetaverseABI,
+        this.wallet,
+      );
+      const extractedAddr = addresses.map((i) => i.ethAddress);
+      console.log('eth add: ', extractedAddr);
+      const tx = await stakingContract.addWhitelistBatch(
+        extractedAddr,
+        extractedAddr.map((i) => true),
+        {
+          gasLimit: 500000,
+        },
+      );
+      await tx.wait();
+    } catch (err) {
+      console.log('error nè: ', err);
     }
   }
 

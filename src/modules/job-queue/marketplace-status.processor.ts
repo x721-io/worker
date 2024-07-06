@@ -7,6 +7,8 @@ import { OnModuleInit } from '@nestjs/common';
 import { logger } from 'src/commons';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CONTRACT_TYPE, SELL_STATUS, Prisma } from '@prisma/client';
+import MetricCommon from 'src/commons/Metric.common';
+import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 @Processor(QUEUE_NAME_MARKETPLACE_STATUS)
 export class MarketplaceStatusProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
@@ -21,7 +23,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   private sdk = getSdk(this.client);
 
   async onModuleInit() {
-    logger.info(`call First time22`); // Run the task once immediately upon service start
+    logger.info(`call First time QUEUE_NAME_MARKETPLACE_STATUS`); // Run the task once immediately upon service start
     await this.handleSyncMarketPlaceStatus();
   }
 
@@ -241,6 +243,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           txHash: item?.txHash,
           from: item?.from,
           askId: item?.id,
+          // metricPoint: nf
         },
       });
     }
@@ -275,6 +278,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           txHash: item?.txHash,
           from: item?.from,
           askId: item?.id,
+          metricPoint: nft?.metricPoint,
         },
       });
     } else {
@@ -294,6 +298,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           txHash: item?.txHash,
           from: item?.from,
           askId: item?.id,
+          metricPoint: nft?.metricPoint,
         },
       });
     }
@@ -315,11 +320,27 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
               collectionId: collection.id,
             },
           },
+          include: {
+            collection: {
+              select: {
+                address: true,
+                id: true,
+              },
+            },
+          },
         });
       } else {
         return await this.prisma.nFT.findFirst({
           where: {
             AND: [{ u2uId: tokenId }, { collectionId: collection.id }],
+          },
+          include: {
+            collection: {
+              select: {
+                address: true,
+                id: true,
+              },
+            },
           },
         });
       }
@@ -350,6 +371,18 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           id: existingMarketplaceStatus.id,
         },
       });
+      if (
+        item.event === SELL_STATUS.Trade &&
+        (nft?.collection?.address == process.env.BASE_ADDR_721 ||
+          nft?.collection?.address == process.env.BASE_ADDR_1155)
+      ) {
+        await MetricCommon.handleMetricFreeMint(
+          nft.id,
+          nft.collectionId,
+          nft.creatorId,
+          item?.price,
+        );
+      }
     }
   }
 
