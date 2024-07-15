@@ -128,25 +128,37 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
             );
           if (resultSubgraphQuery?.items?.length > 0) {
             for (const item of resultSubgraphQuery?.items) {
-              if (subgraphServiceCommon.isLink(item.tokenURI)) {
-                const resultIPFS: responseIPFS =
-                  await subgraphServiceCommon.getDetailFromIPFS(item.tokenURI);
-                const ipfsPath = resultIPFS.image ?? resultIPFS.image_url;
-                const name = resultIPFS.name ?? item.tokenID;
-                const creatorId =
-                  collection.creators &&
-                  collection.creators[0] &&
-                  collection.creators[0]?.userId;
+              const checkExist = await this.prisma.nFT.findUnique({
+                where: {
+                  id_collectionId: {
+                    collectionId: collection.id,
+                    id: item.tokenID,
+                  },
+                },
+              });
+              if (!checkExist) {
+                if (subgraphServiceCommon.isLink(item.tokenURI)) {
+                  const resultIPFS: responseIPFS =
+                    await subgraphServiceCommon.getDetailFromIPFS(
+                      item.tokenURI,
+                    );
+                  const ipfsPath = resultIPFS.image ?? resultIPFS.image_url;
+                  const name = resultIPFS.name ?? item.tokenID;
+                  const creatorId =
+                    collection.creators &&
+                    collection.creators[0] &&
+                    collection.creators[0]?.userId;
 
-                await this.upsertNFT(
-                  item,
-                  collection.id,
-                  name,
-                  item.tokenURI,
-                  ipfsPath,
-                  creatorId,
-                );
-                await this.upsertUserNFT(item, collection.id, creatorId);
+                  await this.upsertNFT(
+                    item,
+                    collection.id,
+                    name,
+                    item.tokenURI,
+                    ipfsPath,
+                    creatorId,
+                  );
+                  await this.upsertUserNFT(item, collection.id, creatorId);
+                }
               }
             }
             (lastProcessedTimestamp = parseInt(
