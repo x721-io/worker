@@ -20,6 +20,10 @@ query GetMarketplaceStatus721($first: Int!, $skip: Int!, $orderDirection: OrderD
     timestamp
     quoteToken
     address
+    nftIdExtend
+    tokenId
+    flagExtend
+    addressExtend
     nftId {
       id
       identifier
@@ -55,6 +59,10 @@ query GetMarketplaceStatus1155($first: Int!, $skip: Int! , $orderDirection: Orde
     operation
     netPrice
     address
+    tokenId
+    nftIdExtend
+    flagExtend
+    addressExtend
     nftId {
       id
       uri
