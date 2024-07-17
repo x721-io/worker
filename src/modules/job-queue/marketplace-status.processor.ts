@@ -169,8 +169,8 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   async processMarketEvents721(events) {
     Promise.all(
       events.map(async (item) => {
-        if (item.nftId) {
-          const nft = await this.getNFT(item.nftId.tokenId, item?.address);
+        if (item.nftId || item.tokenId) {
+          const nft = await this.getNFT(item.tokenId, item?.address);
           if (nft) {
             const timestamp = parseInt(item.timestamp);
             if (item.event === SELL_STATUS.AskNew) {
@@ -194,8 +194,8 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   async processMarketEvents1155(events) {
     await Promise.all(
       events.map(async (item) => {
-        if (item.nftId) {
-          const nft = await this.getNFT(item.nftId.tokenId, item?.address);
+        if (item.nftId || item.tokenId) {
+          const nft = await this.getNFT(item.tokenId, item?.address);
           if (nft) {
             const timestamp = parseInt(item.timestamp);
             if (item.event === SELL_STATUS.AskNew) {
