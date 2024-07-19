@@ -57,34 +57,49 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
 
   async onModuleInit() {
     logger.info(`call First time: QUEUE_COLLECTION_UTILS `);
-    await Promise.all([
-      this.handleSyncMetricPoint(),
+    await Promise.allSettled([
+      // this.handleSyncMetricPoint(),
       this.handleSyncFloorPrice(),
     ]);
   }
 
   async handleSyncMetricPoint() {
     try {
-      const listCollection = await this.prisma.collection.findMany({
-        where: {
-          NOT: {
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const listCollection = await this.prisma.collection.findMany({
+          where: {
+            NOT: {
+              address: {
+                in: [process.env.BASE_ADDR_1155, process.env.BASE_ADDR_721],
+              },
+            },
             address: {
-              in: [process.env.BASE_ADDR_1155, process.env.BASE_ADDR_721],
+              not: null,
             },
           },
-        },
-      });
-      await Promise.all(
-        listCollection.map(async (item) => {
-          if (item.address) {
-            await MetricCommon.handleMetric(
-              TypeCategory.Collection,
-              MetricCategory.CollectionMetric,
-              item.id,
-            );
-          }
-        }),
-      );
+          take: batchSize,
+          skip: offset,
+        });
+
+        if (listCollection?.length > 0) {
+          await Promise.allSettled(
+            listCollection.map(async (item) => {
+              await MetricCommon.handleMetric(
+                TypeCategory.Collection,
+                MetricCategory.CollectionMetric,
+                item.id,
+              );
+            }),
+          );
+          offset += batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
       logger.info(`Sync Data Metric Collection Successfully`);
     } catch (error) {
       logger.error(
@@ -184,12 +199,33 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   @Cron(CronExpression.EVERY_2_HOURS)
   async handleSyncFloorPrice() {
     try {
-      const listCollection = await this.prisma.collection.findMany();
-      await Promise.all(
-        listCollection.map(async (item) => {
-          await this.handleUpdateFloorPrice(item.address);
-        }),
-      );
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const listCollection = await this.prisma.collection.findMany({
+          where: {
+            address: {
+              not: null,
+            },
+          },
+          take: batchSize,
+          skip: offset,
+        });
+        if (listCollection?.length > 0) {
+          await Promise.allSettled(
+            listCollection.map(async (item) => {
+              await this.handleUpdateFloorPrice(item.address);
+            }),
+          );
+          // for (const item of listCollection) {
+          //   // await this.handleUpdateFloorPrice(item.address);
+          // }
+          offset += batchSize;
+        } else {
+          hasMore = false;
+        }
+      }
       logger.info(`Sync Data Floor Price All Collection Successfully`);
       // collection
     } catch (error) {
