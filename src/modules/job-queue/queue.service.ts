@@ -22,6 +22,7 @@ export class QueueService {
     },
     removeOnComplete: true,
     removeOnFail: true,
+    timeout: 10000,
     // You can add other default settings here
   };
 
