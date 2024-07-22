@@ -121,21 +121,23 @@ export class ProjectProcessor {
           }
         }
         try {
-          const stakingContract = new ethers.Contract(
-            MemetaverseAddr,
-            MemetaverseABI,
-            this.wallet,
-          );
-          const extractedAddr = addresses.map((i) => i.ethAddress);
-          console.log('eth add: ', extractedAddr);
-          const tx = await stakingContract.addWhitelistBatch(
-            extractedAddr,
-            extractedAddr.map((i) => true),
-            {
-              gasLimit: 500000,
-            },
-          );
-          await tx.wait();
+          if (addresses.length > 0) {
+            const stakingContract = new ethers.Contract(
+              MemetaverseAddr,
+              MemetaverseABI,
+              this.wallet,
+            );
+            const extractedAddr = addresses.map((i) => i.ethAddress);
+            console.log('eth add: ', extractedAddr);
+            const tx = await stakingContract.addWhitelistBatch(
+              extractedAddr,
+              extractedAddr.map((i) => true),
+              {
+                gasLimit: 500000,
+              },
+            );
+            await tx.wait();
+          }
         } catch (err) {
           console.log('error nè: ', err);
           throw new Error(err);
