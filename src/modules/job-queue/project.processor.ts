@@ -88,13 +88,13 @@ export class ProjectProcessor {
       lastId = null;
     }
 
-    const addresses = [];
     while (continueFetching) {
+      const addresses = [];
       try {
         const response = await axios.get(
-          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/11899589-b0f8-4e7f-a577-0d3ce5855fa2/whitelist-users',
+          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/d8fd0f3a-2908-45b3-8f2a-354abfba3c90/whitelist-users',
           {
-            params: { limit: 2, cursor: lastId },
+            params: { limit: 5, cursor: lastId },
           },
         );
         const data = response.data;
@@ -120,31 +120,30 @@ export class ProjectProcessor {
             );
           }
         }
+        try {
+          const stakingContract = new ethers.Contract(
+            MemetaverseAddr,
+            MemetaverseABI,
+            this.wallet,
+          );
+          const extractedAddr = addresses.map((i) => i.ethAddress);
+          console.log('eth add: ', extractedAddr);
+          const tx = await stakingContract.addWhitelistBatch(
+            extractedAddr,
+            extractedAddr.map((i) => true),
+            {
+              gasLimit: 500000,
+            },
+          );
+          await tx.wait();
+        } catch (err) {
+          console.log('error nè: ', err);
+          throw new Error(err);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         throw new Error('failed');
       }
-    }
-    console.log('filtered data: ', addresses);
-
-    try {
-      const stakingContract = new ethers.Contract(
-        MemetaverseAddr,
-        MemetaverseABI,
-        this.wallet,
-      );
-      const extractedAddr = addresses.map((i) => i.ethAddress);
-      console.log('eth add: ', extractedAddr);
-      const tx = await stakingContract.addWhitelistBatch(
-        extractedAddr,
-        extractedAddr.map((i) => true),
-        {
-          gasLimit: 500000,
-        },
-      );
-      await tx.wait();
-    } catch (err) {
-      console.log('error nè: ', err);
     }
   }
 
