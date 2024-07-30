@@ -10,6 +10,7 @@ import {
   QUEUE_NAME_USER,
   QUEUE_NAME_MARKETPLACE_STATUS,
   QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+  QUEUE_NAME_CMS,
 } from '../../constants/Job.constant';
 
 @Module({
@@ -34,6 +35,9 @@ import {
       { name: QUEUE_NAME_MARKETPLACE_STATUS },
       {
         name: QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+      },
+      {
+        name: QUEUE_NAME_CMS,
       },
     ),
   ],

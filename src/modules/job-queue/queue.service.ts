@@ -10,6 +10,7 @@ import {
   QUEUE_NAME_USER,
   QUEUE_NAME_MARKETPLACE_STATUS,
   QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+  QUEUE_NAME_CMS,
 } from 'src/constants/Job.constant';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class QueueService {
   constructor(
     @InjectQueue(QUEUE_NAME_COLLECTION) private collectionQueue: Queue,
     @InjectQueue(QUEUE_COLLECTION_UTILS) private collectionUtilsQueue: Queue,
+    @InjectQueue(QUEUE_NAME_CMS) private cmsQueue: Queue,
     @InjectQueue(QUEUE_NAME_NFT) private nftQueue: Queue,
     @InjectQueue(QUEUE_NAME_IPFS) private ipfsQueue: Queue,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
@@ -69,5 +71,8 @@ export class QueueService {
   }
   async addQuoteTokenAccessJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.quoteTokenQueue, jobType, jobData);
+  }
+  async addCMSJob(jobType: string, jobData: any) {
+    await this.addJobToQueue(this.cmsQueue, jobType, jobData);
   }
 }
