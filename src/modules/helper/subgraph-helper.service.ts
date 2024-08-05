@@ -16,6 +16,11 @@ import {
 } from 'src/generated/SubgraphExternal/graphql';
 import axios from 'axios';
 import { logger } from 'src/commons';
+import {
+  CmsSummaryTransactionQueryVariables,
+  EventType,
+  getSdk,
+} from 'src/generated/graphql';
 
 class subgraphServiceCommon {
   apiService: ApiCallerService;
@@ -162,6 +167,29 @@ class subgraphServiceCommon {
     } catch (error) {
       console.log('getAllCollectionExternal', error);
     }
+  }
+
+  async getSummaryTransaction(
+    event?: EventType,
+    skip?: number,
+    first?: number,
+  ) {
+    const client = new GraphQLClient(process.env.SUBGRAPH_URL);
+    const sdk = getSdk(client);
+    const variables: CmsSummaryTransactionQueryVariables = {
+      event: event,
+      first,
+      skip,
+    };
+    const response = sdk.CMSSummaryTransaction(variables);
+    return response;
+  }
+
+  async getSummaryVolume(address: string) {
+    const client = new GraphQLClient(process.env.SUBGRAPH_URL);
+    const sdk = getSdk(client);
+    const response = await sdk.CMSSummaryVolume({ address: address });
+    return response;
   }
 }
 

@@ -15,6 +15,7 @@ import { UserProcessor } from './user.processor';
 import { CollectionsUtilsProcessor } from './collection-utils.processor';
 import { MarketplaceStatusProcessor } from './marketplace-status.processor';
 import { QuoteTokenAcceptProcessor } from './quote-token-accept.processor';
+import { CMSProcessor } from './cms.processor';
 @Module({
   providers: [
     QueueService,
@@ -31,6 +32,7 @@ import { QuoteTokenAcceptProcessor } from './quote-token-accept.processor';
     CollectionsUtilsProcessor,
     MarketplaceStatusProcessor,
     QuoteTokenAcceptProcessor,
+    CMSProcessor,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })
