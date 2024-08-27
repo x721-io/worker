@@ -1,10 +1,5 @@
 import { GraphQLClient } from 'graphql-request';
-import {
-  EventType,
-  GetNfTsSelling1155QueryVariables,
-  GetNfTsSelling721QueryVariables,
-  getSdk,
-} from 'src/generated/graphql';
+import { EventType } from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { Processor, Process } from '@nestjs/bull';
 import { Job } from 'bull';
@@ -35,7 +30,7 @@ export class CMSProcessor implements OnModuleInit {
     await Promise.allSettled([this.handleSummary()]);
   }
 
-  @Cron('0 0,12 * * *')
+  // @Cron('0 0,12 * * *')
   async callSummaryMidDay() {
     await this.handleSummary();
   }
