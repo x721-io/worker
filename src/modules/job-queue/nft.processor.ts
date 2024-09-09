@@ -70,7 +70,8 @@ export class NFTsCheckProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  // @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
+  @Cron('50 23 * * *')
   async handleSyncTotalStake() {
     const availableProject = await this.prisma.projectRound.findMany({
       where: {
