@@ -201,7 +201,6 @@ export class ProjectProcessor {
           );
         }),
       );
-
       logger.info('addWhiteListZero Successful');
     } catch (error) {
       logger.error('addWhiteListZero Failed', error.message);
