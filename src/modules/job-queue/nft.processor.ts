@@ -170,12 +170,10 @@ export class NFTsCheckProcessor {
     //     return uri;
     //   }),
     // );
-    console.log('input: ', input);
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
     );
-    console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
       const convertToStringAttr =
         metadataArray[i] && metadataArray[i].attributes
