@@ -1,0 +1,19 @@
+query CMSSummaryTransaction($first: Int = 1000, $skip: Int = 0, $event: EventType) {
+  blocks(
+    first: $first
+    skip: $skip
+    where: {event: $event}
+  ) {
+    timestampt
+    id
+    event
+  }
+}
+
+query CMSSummaryVolume($address: ID!) {
+  marketVolume(id: $address) {
+    type
+    totalVolume
+    id
+  }
+}

@@ -70,29 +70,37 @@ export class NFTsCheckProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleSyncTotalStake() {
-    const availableProject = await this.prisma.projectRound.findMany({
-      where: {
-        AND: [
-          { stakeBefore: { gte: new Date() } },
-          {
-            Project: {
-              isActivated: true,
+  @Cron('50 23 * * *')
+  async handleSyncTotalStake(retryCount = 1) {
+    try {
+      const availableProject = await this.prisma.projectRound.findMany({
+        where: {
+          AND: [
+            { stakeBefore: { gte: new Date() } },
+            {
+              Project: {
+                isActivated: true,
+              },
             },
-          },
-          {
-            RoundInfo: {
-              type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+            {
+              RoundInfo: {
+                type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+              },
             },
-          },
-        ],
-      },
-    });
-    for (let i = 0; i < availableProject.length; i++) {
-      this.checkStaking(availableProject[i].projectId);
+          ],
+        },
+      });
+      for (let i = 0; i < availableProject.length; i++) {
+        this.checkStaking(availableProject[i].projectId);
+      }
+      logger.info(`Snapshot LaunchPad: ${new Date()}`);
+    } catch (error) {
+      logger.error('handleSyncTotalStake Failed', error.message);
+      if (retryCount > 0) {
+        logger.info('Retrying handleSyncTotalStake...');
+        await this.handleSyncTotalStake(retryCount - 1);
+      }
     }
-    logger.info(`Snapshot LaunchPad: ${new Date()}`);
   }
 
   @Process('nft-create')
@@ -162,12 +170,10 @@ export class NFTsCheckProcessor {
     //     return uri;
     //   }),
     // );
-    console.log('input: ', input);
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
     );
-    console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
       const convertToStringAttr =
         metadataArray[i] && metadataArray[i].attributes

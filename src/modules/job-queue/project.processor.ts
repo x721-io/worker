@@ -1,4 +1,8 @@
-import {} from 'src/generated/graphql';
+import {
+  getSdk,
+  GetStakingQueryVariables,
+  GetStakingToAddWhiteListQueryVariables,
+} from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QUEUE_NAME_PROJECT } from 'src/constants/Job.constant';
 import { InjectQueue, Process, Processor } from '@nestjs/bull';
@@ -6,10 +10,13 @@ import { Job, Queue } from 'bull';
 import { ethers } from 'ethers';
 import { abi as roundAbi } from 'abis/Round.json';
 import { abi as MemetaverseABI } from 'abis/MemetaverseRound.json';
+import { abi as RoundZero } from 'abis/RoundZero.json';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { RedisSubscriberService } from './redis.service';
 import axios from 'axios';
 import { MemetaverseAddr } from 'src/constants/web3Const/address';
+import { logger } from 'src/commons';
+import { GraphQLClient } from 'graphql-request';
 
 interface ConfigRound {
   id: string;
@@ -22,10 +29,15 @@ export class ProjectProcessor {
     private readonly redisClient: RedisSubscriberService,
     @InjectQueue(QUEUE_NAME_PROJECT) private projectQueue: Queue,
   ) {}
-  private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 
+  private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
+  private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
   private privateKey = process.env.ADMIN_PVK as string;
   private wallet = new ethers.Wallet(this.privateKey, this.provider);
+
+  private getGraphqlClientStaking() {
+    return new GraphQLClient(this.endpointStaking);
+  }
 
   @Process('config-round-timer')
   async configRound(job: Job<ConfigRound>): Promise<void> {
@@ -156,6 +168,124 @@ export class ProjectProcessor {
       console.log(a);
     } else {
       console.error('Cannot schedule a job in the past');
+    }
+  }
+
+  @Cron('50 23 * * *')
+  async addWhiteListZero() {
+    try {
+      const availableProject = await this.prisma.projectRound.findMany({
+        where: {
+          AND: [
+            { stakeBefore: { gte: new Date() } },
+            {
+              Project: {
+                isActivated: true,
+              },
+            },
+            {
+              RoundInfo: {
+                type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+              },
+            },
+          ],
+        },
+      });
+
+      await Promise.all(
+        availableProject.map(async (item) => {
+          await this.checkStaking(
+            item.projectId,
+            item.requiredStaking,
+            item.address,
+          );
+        }),
+      );
+      logger.info('addWhiteListZero Successful');
+    } catch (error) {
+      logger.error('addWhiteListZero Failed', error.message);
+    }
+  }
+
+  async checkStaking(
+    projectId: string,
+    requestStaking: string,
+    addressContract: string,
+  ) {
+    try {
+      const roundZeroContract = new ethers.Contract(
+        addressContract,
+        RoundZero,
+        this.wallet,
+      );
+      const result = await this.prisma.project.findUnique({
+        where: {
+          id: projectId,
+        },
+        include: {
+          UserProject: {
+            select: {
+              subscribeDate: true,
+              User: {
+                select: {
+                  id: true,
+                  email: true,
+                  avatar: true,
+                  username: true,
+                  publicKey: true,
+                  signer: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      const { UserProject } = result;
+      const client = this.getGraphqlClientStaking();
+      const sdk = getSdk(client);
+
+      const mapAddress = [];
+
+      for (const item of UserProject) {
+        const { User } = item;
+        if (User && User.signer) {
+          const variables: GetStakingToAddWhiteListQueryVariables = {
+            id: User.signer.toLowerCase(),
+            stakedAmount: requestStaking,
+          };
+          const response = await sdk.getStakingToAddWhiteList(variables);
+          const { delegators }: any = response;
+
+          const IsUserWhitelisted =
+            await roundZeroContract.checkIsUserWhitelisted(User.signer);
+
+          if (delegators?.[0] && IsUserWhitelisted == false) {
+            mapAddress.push(User.signer);
+          }
+        }
+      }
+      await this.addWhiteList(mapAddress, addressContract);
+
+      // return listStaking;
+    } catch (error) {
+      logger.error('checkStaking Failed', error.message);
+    }
+  }
+
+  async addWhiteList(listAddress: string[], addressContract: string) {
+    try {
+      const roundZeroContract = new ethers.Contract(
+        addressContract,
+        RoundZero,
+        this.wallet,
+      );
+      if (roundZeroContract && listAddress?.length > 0) {
+        const tx = await roundZeroContract.addWhitelistOwner(listAddress);
+        await tx.wait();
+      }
+    } catch (error) {
+      console.log(error);
+      logger.error('addWhiteList Failed', error);
     }
   }
 }
