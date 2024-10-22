@@ -49,15 +49,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
     return new GraphQLClient(this.endpointStaking);
   }
 
-  onModuleInit() {
-    // Initialize the dynamic job with default cron time
-    this.dynamicScheduleService.addDynamicCronJob(
-      this.pendingNFTJob,
-      CronExpression.EVERY_10_SECONDS,
-      this.handlePendingFailedNft.bind(this),
-    );
-  }
-
   // @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingFailedNft() {
     try {

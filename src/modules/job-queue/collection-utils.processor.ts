@@ -58,7 +58,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     logger.info(`call First time: QUEUE_COLLECTION_UTILS `);
     await Promise.allSettled([
       // this.handleSyncMetricPoint(),
-      this.handleSyncFloorPrice(),
+      // this.handleSyncFloorPrice(),
     ]);
   }
 
@@ -107,7 +107,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncCollectionExtend() {
     try {
       const collectionExtend = await this.getCollectionsToExtend();

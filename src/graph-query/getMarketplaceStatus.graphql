@@ -73,3 +73,34 @@ query GetMarketplaceStatus1155($first: Int!, $skip: Int! , $orderDirection: Orde
     }
   }
 }
+
+query GetOrders($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt! = 0) {
+  orders(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+    where: {
+      timestamp_gt: $timestamp
+    }
+  ) {
+    timestamp
+    status
+    sig
+    index
+    id
+    maker {
+      id
+      onSaleCount
+      holdingCount
+    }
+    taker {
+      id
+      onSaleCount
+      holdingCount
+      events {
+        id
+      }
+    }
+  }
+}
