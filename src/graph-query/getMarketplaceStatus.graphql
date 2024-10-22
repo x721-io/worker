@@ -73,3 +73,76 @@ query GetMarketplaceStatus1155($first: Int!, $skip: Int! , $orderDirection: Orde
     }
   }
 }
+
+query GetOrders($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt! = 0) {
+  orders(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+    where: {
+      timestamp_gt: $timestamp
+      status_in: [FILLED, CANCELED]
+  	}
+  ) {
+    timestamp
+    takeQty
+    status
+    sig
+    nonce
+    index
+    id
+    filledQty
+    maker {
+      onSaleCount
+      id
+      holdingCount
+    }
+    taker {
+      onSaleCount
+      id
+      holdingCount
+    }
+  }
+}
+
+
+query GetOrdersTransfer($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt! = 0) {
+  orderTransfers(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+    where: {
+      timestamp_gt: $timestamp
+      status_in: [TRANSFER]
+      maker : "0x51d34e009e5315263120347f038962b681a6e84b"
+  	}
+  ) {
+    tokenId
+    timestamp
+    takeQty
+    status
+    remainQty
+    id
+    collection
+    maker {
+      id
+      onSaleCount
+      holdingCount
+    }
+    taker {
+      onSaleCount
+      id
+      holdingCount
+    }
+  }
+}
+
+query userBalance1155($id: ID!) {
+  erc1155Balance(id: $id) {
+    valueExact
+    value
+    id
+  }
+}
