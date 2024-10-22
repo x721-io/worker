@@ -16,12 +16,13 @@ export class UserProcessor {
   async verifyEmail(job: Job<any>) {
     try {
       logger.error(`Send Mail Success: ${JSON.stringify(job?.data)}`);
-      const { email, verifyToken } = job?.data;
+      const { email, verifyToken, name } = job?.data;
       await this.mailService.sendMail({
         to: email,
         subject: 'Email Verify Account Marketplace',
         template: './email',
         context: {
+          username: name,
           link: `${process.env.MAIL_REDIRECT_URL}/user/email-verification?token=${verifyToken}`,
         },
       });

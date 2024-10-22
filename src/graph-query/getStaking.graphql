@@ -8,3 +8,17 @@ query getStaking($id: ID!) {
     address
     }
 }
+
+query getStakingToAddWhiteList($id: ID!, $stakedAmount: BigInt = 0) {
+    delegators(where: {
+      id: $id
+      stakedAmount_gte: $stakedAmount
+    }) {
+    totalLockStake
+    totalClaimedRewards
+    stakedAmount
+    id
+    createdOn
+    address
+    }
+}

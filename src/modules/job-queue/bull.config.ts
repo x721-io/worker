@@ -1,12 +1,16 @@
 import { BullModule } from '@nestjs/bull';
 import { Module } from '@nestjs/common';
 import {
+  QUEUE_COLLECTION_UTILS,
   QUEUE_NAME_COLLECTION,
   QUEUE_NAME_IPFS,
   QUEUE_NAME_NFT,
   QUEUE_NAME_PROJECT,
   QUEUE_NAME_TIMER,
   QUEUE_NAME_USER,
+  QUEUE_NAME_MARKETPLACE_STATUS,
+  QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+  QUEUE_NAME_CMS,
 } from '../../constants/Job.constant';
 
 @Module({
@@ -27,6 +31,14 @@ import {
       { name: QUEUE_NAME_PROJECT },
       { name: QUEUE_NAME_TIMER },
       { name: QUEUE_NAME_USER },
+      { name: QUEUE_COLLECTION_UTILS },
+      { name: QUEUE_NAME_MARKETPLACE_STATUS },
+      {
+        name: QUEUE_NAME_QUOTE_TOKEN_ACCEPT,
+      },
+      {
+        name: QUEUE_NAME_CMS,
+      },
     ),
   ],
   exports: [BullModule],

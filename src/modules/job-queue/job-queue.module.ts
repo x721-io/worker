@@ -12,7 +12,10 @@ import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
 import { ProjectProcessor } from './project.processor';
 import { ApiCallerModule } from '../api-caller/api-caller.module';
 import { UserProcessor } from './user.processor';
-
+import { CollectionsUtilsProcessor } from './collection-utils.processor';
+import { MarketplaceStatusProcessor } from './marketplace-status.processor';
+import { QuoteTokenAcceptProcessor } from './quote-token-accept.processor';
+import { CMSProcessor } from './cms.processor';
 @Module({
   providers: [
     QueueService,
@@ -26,6 +29,10 @@ import { UserProcessor } from './user.processor';
     GraphQlcallerService,
     ProjectProcessor,
     UserProcessor,
+    CollectionsUtilsProcessor,
+    MarketplaceStatusProcessor,
+    QuoteTokenAcceptProcessor,
+    CMSProcessor,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })

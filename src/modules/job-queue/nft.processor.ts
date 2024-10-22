@@ -19,6 +19,8 @@ import OtherCommon from 'src/commons/Other.common';
 import { ApiCallerService } from '../api-caller/api-caller.service';
 import { validate as isValidUUID } from 'uuid';
 import { logger } from 'src/commons';
+import MetricCommon from 'src/commons/Metric.common';
+import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
@@ -45,54 +47,68 @@ export class NFTsCheckProcessor {
 
   @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingFailedNft() {
-    console.log('vãi lồn');
     const pendingNfts = await this.prisma.nFT.findMany({
       where: {
         OR: [{ status: TX_STATUS.PENDING }],
       },
       include: {
         collection: true,
+        Trait: true,
       },
     });
     for (let i = 0; i < pendingNfts.length; i++) {
-      await this.crawlNftInfoToDbSingle(
-        pendingNfts[i],
-        pendingNfts[i].collection,
-      );
+      if (
+        pendingNfts[i] &&
+        pendingNfts[i].Trait &&
+        pendingNfts[i].Trait.length <= 0
+      ) {
+        await this.crawlNftInfoToDbSingle(
+          pendingNfts[i],
+          pendingNfts[i].collection,
+        );
+      }
     }
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_MIDNIGHT)
-  async handleSyncTotalStake() {
-    const availableProject = await this.prisma.projectRound.findMany({
-      where: {
-        AND: [
-          { stakeBefore: { gte: new Date() } },
-          {
-            Project: {
-              isActivated: true,
+  @Cron('50 23 * * *')
+  async handleSyncTotalStake(retryCount = 1) {
+    try {
+      const availableProject = await this.prisma.projectRound.findMany({
+        where: {
+          AND: [
+            { stakeBefore: { gte: new Date() } },
+            {
+              Project: {
+                isActivated: true,
+              },
             },
-          },
-          {
-            RoundInfo: {
-              type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+            {
+              RoundInfo: {
+                type: { in: ['U2UPremintRoundZero', 'U2UMintRoundZero'] },
+              },
             },
-          },
-        ],
-      },
-    });
-    for (let i = 0; i < availableProject.length; i++) {
-      this.checkStaking(availableProject[i].projectId);
+          ],
+        },
+      });
+      for (let i = 0; i < availableProject.length; i++) {
+        this.checkStaking(availableProject[i].projectId);
+      }
+      logger.info(`Snapshot LaunchPad: ${new Date()}`);
+    } catch (error) {
+      logger.error('handleSyncTotalStake Failed', error.message);
+      if (retryCount > 0) {
+        logger.info('Retrying handleSyncTotalStake...');
+        await this.handleSyncTotalStake(retryCount - 1);
+      }
     }
-    logger.info(`Snapshot LaunchPad: ${new Date()}`);
   }
 
   @Process('nft-create')
   private async checkNFTStatus(job: Job<any>) {
-    const { txCreation: hash, type } = job.data;
+    const { txCreation: hash, type, collectionId } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    console.log('let see: ', hash, type);
+    // console.log('let see: ', hash, type);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
       txCreation: hash,
     };
@@ -109,6 +125,12 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          // Update Metric Point
+          await MetricCommon.handleMetric(
+            TypeCategory.Collection,
+            MetricCategory.CollectionMetric,
+            collectionId,
+          );
           return response;
         } else {
           throw new Error('NO TX FOUND YET');
@@ -124,6 +146,12 @@ export class NFTsCheckProcessor {
               status: TX_STATUS.SUCCESS,
             },
           });
+          // Update Metric Point
+          await MetricCommon.handleMetric(
+            TypeCategory.Collection,
+            MetricCategory.CollectionMetric,
+            collectionId,
+          );
           return response;
         } else {
           throw new Error('NO TX FOUND YET');
@@ -142,12 +170,10 @@ export class NFTsCheckProcessor {
     //     return uri;
     //   }),
     // );
-    console.log('input: ', input);
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
     );
-    console.log('ủa: ', metadataArray);
     for (let i = 0; i < input.length; i++) {
       const convertToStringAttr =
         metadataArray[i] && metadataArray[i].attributes
@@ -363,6 +389,7 @@ export class NFTsCheckProcessor {
     }
   }
   private async crawlNftInfoToDbSingle(tokenId: NFT, collectionId: Collection) {
+    console.log('haha: ', tokenId.txCreationHash);
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
@@ -373,6 +400,7 @@ export class NFTsCheckProcessor {
     else normId = tokenId.id;
     try {
       if (collectionId.type === 'ERC721') {
+        console.log(collectionId.address);
         const { erc721Tokens } = await sdk.Get721NFTs(variables);
         if (erc721Tokens.length > 0) {
           const uri = await this.NftCrawler.getSingleErc721NftData(
@@ -412,7 +440,18 @@ export class NFTsCheckProcessor {
           // }
           return erc721Tokens;
         } else {
-          throw new Error('NO TX FOUND YET');
+          console.error('NO TX FOUND YET');
+          await this.prisma.nFT.update({
+            where: {
+              id_collectionId: {
+                id: tokenId.id,
+                collectionId: collectionId.id,
+              },
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            },
+          });
         }
       } else if (collectionId.type === 'ERC1155') {
         const { erc1155Tokens } = await sdk.Get1155NFTs(variables);
@@ -453,7 +492,18 @@ export class NFTsCheckProcessor {
           // }
           return erc1155Tokens;
         } else {
-          throw new Error('NO TX FOUND YET');
+          console.error('NO TX FOUND YET');
+          await this.prisma.nFT.update({
+            where: {
+              id_collectionId: {
+                id: tokenId.id,
+                collectionId: collectionId.id,
+              },
+            },
+            data: {
+              status: TX_STATUS.FAILED,
+            },
+          });
         }
       }
     } catch (err) {

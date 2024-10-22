@@ -6,6 +6,7 @@ dotenvConfig();
 @Injectable()
 export class RedisSubscriberService implements OnModuleInit {
   private redisClient: Redis;
+  public redisGetSet: Redis;
 
   constructor(private queueService: QueueService) {
     this.redisClient = new Redis({
@@ -13,6 +14,13 @@ export class RedisSubscriberService implements OnModuleInit {
       host: process.env.REDISDB_HOST,
       port: process.env.REDISDB_PORT as unknown as number,
       keyPrefix: process.env.REDIS_PREFIX,
+      password: process.env.REDIS_PASSWORD,
+    });
+
+    this.redisGetSet = new Redis({
+      // Redis configuration
+      host: process.env.REDISDB_HOST,
+      port: process.env.REDISDB_PORT as unknown as number,
       password: process.env.REDIS_PASSWORD,
     });
   }
@@ -23,6 +31,7 @@ export class RedisSubscriberService implements OnModuleInit {
     this.redisClient.subscribe('ipfs');
     this.redisClient.subscribe('project-channel');
     this.redisClient.subscribe('user-channel');
+    this.redisClient.subscribe('collectionUtils-channel');
     this.redisClient.on('message', this.handleMessage.bind(this));
   }
 
@@ -31,6 +40,10 @@ export class RedisSubscriberService implements OnModuleInit {
     if (channel === 'collection-channel') {
       const jobData = JSON.parse(message);
       this.queueService.addCollectionJob(jobData.process, jobData.data);
+    }
+    if (channel === 'collectionUtils-channel') {
+      const jobData = JSON.parse(message);
+      this.queueService.addCollectionUtilsJob(jobData.process, jobData.data);
     }
     if (channel === 'nft-channel') {
       const jobData = JSON.parse(message);
@@ -48,6 +61,18 @@ export class RedisSubscriberService implements OnModuleInit {
     if (channel === 'user-channel') {
       const jobData = JSON.parse(message);
       this.queueService.addUserJob(jobData.process, jobData.data);
+    }
+  }
+
+  async set(key: string, value: any, expireInSeconds?: number): Promise<void> {
+    try {
+      const serializedValue = JSON.stringify(value);
+      await this.redisGetSet.set(key, serializedValue);
+      if (expireInSeconds) {
+        await this.redisGetSet.expire(key, expireInSeconds);
+      }
+    } catch (error) {
+      console.error('Error setting key in Redis:', error);
     }
   }
 }
