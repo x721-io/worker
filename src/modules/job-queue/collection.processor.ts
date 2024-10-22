@@ -32,7 +32,7 @@ export class CollectionsCheckProcessor {
     return new GraphQLClient(this.endpoint);
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingCollection() {
     const pendingCollections = await this.prisma.collection.findMany({
       where: {
@@ -146,7 +146,7 @@ export class CollectionsCheckProcessor {
       );
     }
   }
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCountExternalCollection() {
     try {
       const externalCollections = await this.prisma.collection.findMany({

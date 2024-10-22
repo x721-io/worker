@@ -45,7 +45,7 @@ export class NFTsCheckProcessor {
     return new GraphQLClient(this.endpointStaking);
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingFailedNft() {
     const pendingNfts = await this.prisma.nFT.findMany({
       where: {

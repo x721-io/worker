@@ -23,10 +23,10 @@ export class QuoteTokenAcceptProcessor implements OnModuleInit {
 
   async onModuleInit() {
     logger.info(`Call First Time Quote Token Access`);
-    await this.handleSyncDataAccessQuoteToken();
+    // await this.handleSyncDataAccessQuoteToken();
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async callEach10SecondSyncQuoteTokenAccept() {
     try {
       logger.info(`call per 10 seconds`); // Run the task once immediately upon service start
