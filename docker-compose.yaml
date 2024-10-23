@@ -12,3 +12,7 @@ services:
       - ../logs/x721-worker:/usr/src/app/x721-worker/logs
     env_file:
       - .env
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 300m
