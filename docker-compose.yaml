@@ -1,7 +1,7 @@
 version: '3'
 services:
-  ext-server:
-    container_name: u2u-server-worker
+  worker:
+    container_name: x721-worker
     build:
       context: .
       dockerfile: Dockerfile
@@ -9,11 +9,6 @@ services:
     ports:
       - '8887:7777'
     volumes:
-      - ../logs/u2u-marketplace-worker:/usr/src/app/u2u-server-worker/logs
-    networks:
-      - u2u-nw
+      - ../logs/x721-worker:/usr/src/app/x721-worker/logs
     env_file:
       - .env
-networks:
-  u2u-nw:
-    external: true
