@@ -25,7 +25,7 @@ interface itemSubgraph {
   tokenID: string;
   id: string;
   balance?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 interface listItemSubgraph {
@@ -37,6 +37,7 @@ interface responseIPFS {
   image_url?: string;
   name?: string;
   fileUrls?: any[];
+  attributes?: any[];
 }
 @Processor(QUEUE_COLLECTION_UTILS)
 export class CollectionsUtilsProcessor implements OnModuleInit {
@@ -59,7 +60,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     logger.info(`call First time: QUEUE_COLLECTION_UTILS `);
     await Promise.allSettled([
       // this.handleSyncMetricPoint(),
-      this.handleSyncFloorPrice(),
+      // this.handleSyncFloorPrice(),
     ]);
   }
 
@@ -120,6 +121,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
         return;
       }
       for (const collection of collectionExtend) {
+        const isFixed = collection?.source === 'FIXEDCOLLECTION' ? true : false;
         await this.prisma.collection.update({
           where: {
             id: collection.id,
@@ -140,6 +142,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
               skip,
               first,
               collection?.lastTimeSync,
+              isFixed,
             );
           if (resultSubgraphQuery?.items?.length > 0) {
             for (const item of resultSubgraphQuery?.items) {
@@ -164,21 +167,36 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
                     collection.creators[0] &&
                     collection.creators[0]?.userId;
 
-                  await this.upsertNFT(
+                  console.log('🚀 ~ handleSyncCollectionExtend ~ :', {
                     item,
-                    collection.id,
+                    trait: resultIPFS?.attributes,
+                    collection: collection.id,
                     name,
-                    item.tokenURI,
+                    tokenURI: item.tokenURI,
                     ipfsPath,
                     creatorId,
-                  );
-                  await this.upsertUserNFT(item, collection.id, creatorId);
+                  });
+
+                  // await this.upsertNFT(
+                  //   item,
+                  //   collection.id,
+                  //   name,
+                  //   item.tokenURI,
+                  //   ipfsPath,
+                  //   creatorId,
+                  // );
+                  // await this.upsertUserNFT(item, collection.id, creatorId);
                 }
               }
             }
             (lastProcessedTimestamp = parseInt(
-              resultSubgraphQuery.items[resultSubgraphQuery.items.length - 1]
-                .createdAt,
+              isFixed
+                ? resultSubgraphQuery.items[
+                    resultSubgraphQuery.items.length - 1
+                  ].tokenID
+                : resultSubgraphQuery.items[
+                    resultSubgraphQuery.items.length - 1
+                  ].createdAt,
             )),
               await this.updateCollectionSyncStatus(
                 collection.id,

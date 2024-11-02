@@ -4,10 +4,12 @@ import { gql, GraphQLClient } from 'graphql-request';
 import {
   getSdk as getSdk1155,
   GetItems1155QueryVariables,
+  GetItems1155FixedQueryVariables,
 } from 'src/generated/Template1155/graphql';
 import {
   getSdk as getSdk721,
   GetItems721QueryVariables,
+  GetItems721FixedQueryVariables,
 } from 'src/generated/Template721/graphql';
 import {
   getSdk as getSdkExternal,
@@ -33,13 +35,26 @@ class subgraphServiceCommon {
     skip: number,
     first: number,
     createdAt: number,
+    isFixed = false,
   ) {
     try {
       if (!url) return;
       const result =
         type == CONTRACT_TYPE.ERC1155
-          ? await this.getSubgraphItems1155(url, skip, first, createdAt)
-          : await this.getSubgraphItems721(url, skip, first, createdAt);
+          ? await this.getSubgraphItems1155(
+              url,
+              skip,
+              first,
+              createdAt,
+              isFixed,
+            )
+          : await this.getSubgraphItems721(
+              url,
+              skip,
+              first,
+              createdAt,
+              isFixed,
+            );
       return result;
     } catch (error) {
       // console.error(error);
@@ -73,18 +88,21 @@ class subgraphServiceCommon {
     url: string,
     skip: number,
     first: number,
-    createdAt: number,
+    lastFetched: number,
+    isFixed = false,
   ) {
     try {
       const client = new GraphQLClient(url);
       const sdk = getSdk721(client);
-      const variables: GetItems721QueryVariables = {
-        skip: skip,
-        first: first,
-        createdAt: createdAt,
-      };
-      const reponse = await sdk.getItems721(variables);
-      return reponse;
+      const variables = isFixed
+        ? { skip, first, tokenID: lastFetched }
+        : { skip, first, createdAt: lastFetched };
+
+      return isFixed
+        ? await sdk.getItems721Fixed(
+            variables as GetItems721FixedQueryVariables,
+          )
+        : await sdk.getItems721(variables as GetItems721QueryVariables);
     } catch (error) {
       logger.error(`getSubgraphItems721: ${error}`);
     }
@@ -94,18 +112,22 @@ class subgraphServiceCommon {
     url: string,
     skip: number,
     first: number,
-    createdAt: number,
+    lastFetched: number,
+    isFixed = false,
   ) {
     try {
       const client = new GraphQLClient(url);
       const sdk = getSdk1155(client);
-      const variables: GetItems1155QueryVariables = {
-        skip: skip,
-        first: first,
-        createdAt: createdAt,
-      };
-      const reponse = await sdk.getItems1155(variables);
-      return reponse;
+
+      const variables = isFixed
+        ? { skip, first, tokenID: lastFetched }
+        : { skip, first, createdAt: lastFetched };
+
+      return isFixed
+        ? await sdk.getItems1155Fixed(
+            variables as GetItems1155FixedQueryVariables,
+          )
+        : await sdk.getItems1155(variables as GetItems1155QueryVariables);
     } catch (error) {
       logger.error(`getSubgraphItems1155: ${error}`);
     }

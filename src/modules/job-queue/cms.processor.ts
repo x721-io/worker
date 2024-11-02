@@ -27,7 +27,7 @@ export class CMSProcessor implements OnModuleInit {
 
   async onModuleInit() {
     logger.info(`call First time: QUEUE_NAME_CMS `);
-    await Promise.allSettled([this.handleSummary()]);
+    // await Promise.allSettled([this.handleSummary()]);
   }
 
   // @Cron('0 0,12 * * *')

@@ -88,7 +88,7 @@ export class ProjectProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  // @Cron(CronExpression.EVERY_5_SECONDS)
   async addWhitelist() {
     // TODO: Fetch data
     // TODO: save last whitelisted to redis

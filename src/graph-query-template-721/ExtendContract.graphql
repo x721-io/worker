@@ -24,3 +24,20 @@ query getItems721($first: Int = 1000, $skip: Int = 0, $createdAt: BigInt = 0) {
     createdAt
   }
 }
+
+query getItems721Fixed($first: Int = 1000, $skip: Int = 0, $tokenID: BigInt = 0) {
+  items(
+    first: $first
+    skip: $skip
+    orderBy: tokenID
+    orderDirection: asc
+    where: {
+      tokenID_gte : $tokenID
+      tokenID_gt: 0
+    }
+  ) {
+    tokenURI
+    tokenID
+    id
+  }
+}
