@@ -9,6 +9,7 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import { CONTRACT_TYPE, SELL_STATUS, Prisma } from '@prisma/client';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
+import OtherCommon from 'src/commons/Other.common';
 @Processor(QUEUE_NAME_MARKETPLACE_STATUS)
 export class MarketplaceStatusProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
@@ -232,9 +233,9 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           collectionId: nft.collectionId,
           quoteToken: item.quoteToken,
           timestamp,
-          price: this.weiToEther(item.price || 0),
+          price: OtherCommon.weiToEther(item.price || 0),
           priceWei: `${item.price || 0}`,
-          netPrice: this.weiToEther(item.netPrice || 0),
+          netPrice: OtherCommon.weiToEther(item.netPrice || 0),
           netPriceWei: `${item.netPrice || 0}`,
           event: item.event,
           quantity: 1,
@@ -267,9 +268,9 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
           collectionId: nft.collectionId,
           quoteToken: item.quoteToken,
           timestamp,
-          price: this.weiToEther(item.price || 0),
+          price: OtherCommon.weiToEther(item.price || 0),
           priceWei: `${item.price || 0}`,
-          netPrice: this.weiToEther(item.netPrice || 0),
+          netPrice: OtherCommon.weiToEther(item.netPrice || 0),
           netPriceWei: `${item.netPrice || 0}`,
           event: item.event,
           quantity: parseInt(item?.quantity),
@@ -287,9 +288,9 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         data: {
           quoteToken: item.quoteToken,
           timestamp,
-          price: this.weiToEther(item.price || 0),
+          price: OtherCommon.weiToEther(item.price || 0),
           priceWei: `${item.price || 0}`,
-          netPrice: this.weiToEther(item.netPrice || 0),
+          netPrice: OtherCommon.weiToEther(item.netPrice || 0),
           netPriceWei: `${item.netPrice || 0}`,
           event: item.event,
           quantity: parseInt(item?.quantity),
@@ -396,9 +397,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       },
     });
   }
-  weiToEther(wei) {
-    return wei / 1000000000000000000; // 1 Ether = 10^18 Wei
-  }
+
   async updateSyncStatus(
     contractType: CONTRACT_TYPE,
     syncDataStatus: boolean,
