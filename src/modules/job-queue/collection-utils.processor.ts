@@ -308,6 +308,8 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       },
       data: {
         floorPrice: BigInt(floorPrice) / BigInt(10 ** 18),
+        floor: parseFloat(`${BigInt(floorPrice) / BigInt(10 ** 18)}`),
+        floorWei: floorPrice.toString(),
       },
     });
     return true;
