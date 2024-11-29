@@ -11,7 +11,7 @@ import { OnQueueFailed, Process, Processor } from '@nestjs/bull';
 import { QUEUE_NAME_NFT } from 'src/constants/Job.constant';
 import { Job } from 'bull';
 import { NftCrawlerService, NftData } from '../nft-crawler/nft-crawler.service';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, OnModuleInit } from '@nestjs/common';
 import { Metadata } from 'src/commons/types/Trait.type';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
@@ -21,13 +21,14 @@ import { validate as isValidUUID } from 'uuid';
 import { logger } from 'src/commons';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
+import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
   txCreation?: string;
 }
 @Processor(QUEUE_NAME_NFT)
-export class NFTsCheckProcessor {
+export class NFTsCheckProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
   private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
 
@@ -36,8 +37,11 @@ export class NFTsCheckProcessor {
     private readonly NftCrawler: NftCrawlerService,
     private readonly common: CommonService,
     private readonly api: ApiCallerService,
+    private dynamicScheduleService: DynamicScheduleService,
   ) {}
 
+  private pendingNFTJob = 'handlePendingNFTJob';
+  private isNFTJobRunning = false;
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
@@ -45,28 +49,67 @@ export class NFTsCheckProcessor {
     return new GraphQLClient(this.endpointStaking);
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  onModuleInit() {
+    // Initialize the dynamic job with default cron time
+    this.dynamicScheduleService.addDynamicCronJob(
+      this.pendingNFTJob,
+      CronExpression.EVERY_10_SECONDS,
+      this.handlePendingFailedNft.bind(this),
+    );
+  }
+
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingFailedNft() {
-    const pendingNfts = await this.prisma.nFT.findMany({
-      where: {
-        OR: [{ status: TX_STATUS.PENDING }],
-      },
-      include: {
-        collection: true,
-        Trait: true,
-      },
-    });
-    for (let i = 0; i < pendingNfts.length; i++) {
-      if (
-        pendingNfts[i] &&
-        pendingNfts[i].Trait &&
-        pendingNfts[i].Trait.length <= 0
-      ) {
-        await this.crawlNftInfoToDbSingle(
-          pendingNfts[i],
-          pendingNfts[i].collection,
+    try {
+      if (this.isNFTJobRunning) {
+        logger.warn(`Task NFT Pending is already running, skipping execution`);
+        return;
+      }
+
+      this.isNFTJobRunning = true;
+
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+
+      while (hasMore) {
+        const pendingNfts = await this.prisma.nFT.findMany({
+          where: {
+            OR: [{ status: TX_STATUS.PENDING }],
+          },
+          include: {
+            collection: true,
+            Trait: true,
+          },
+          take: batchSize,
+          skip: offset,
+        });
+
+        if (pendingNfts?.length > 0) {
+          await Promise.allSettled(
+            pendingNfts.map(async (nft) => {
+              if (nft && nft?.Trait && nft.Trait?.length <= 0) {
+                await this.crawlNftInfoToDbSingle(nft, nft?.collection);
+              }
+            }),
+          );
+          offset += batchSize;
+        } else {
+          hasMore = false;
+        }
+        // Dynamically adjust job schedule based on pending NFTs count
+        this.dynamicScheduleService.adjustJobSchedule(
+          this.pendingNFTJob,
+          pendingNfts.length,
         );
       }
+      logger.info(`Sync Data Pending Failed NFT Successfully`);
+    } catch (error) {
+      logger.error(
+        `Error Sync Data Pending Failed NFT: ${JSON.stringify(error)}`,
+      );
+    } finally {
+      this.isNFTJobRunning = false;
     }
   }
 
@@ -115,7 +158,6 @@ export class NFTsCheckProcessor {
     try {
       if (type === 'ERC721') {
         const response = await sdk.Get721NFTs(variables);
-        console.log(response);
         if (response.erc721Tokens.length > 0) {
           await this.prisma.nFT.updateMany({
             where: {
@@ -238,7 +280,6 @@ export class NFTsCheckProcessor {
     const { txCreation: hash, type } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    console.log('let see: ', hash, type);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
       txCreation: hash,
     };
@@ -349,7 +390,6 @@ export class NFTsCheckProcessor {
                       };
                     })
                   : null;
-              console.log('alo: ', metadata);
               // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
@@ -389,7 +429,6 @@ export class NFTsCheckProcessor {
     }
   }
   private async crawlNftInfoToDbSingle(tokenId: NFT, collectionId: Collection) {
-    console.log('haha: ', tokenId.txCreationHash);
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
@@ -550,7 +589,7 @@ export class NFTsCheckProcessor {
 
   @OnQueueFailed()
   private async onNFTCreateFail(job: Job<any>, error: Error) {
-    console.error(`Job failed: ${job.id} with error: ${error.message}`);
+    logger.error(`Job failed: ${job.id} with error: ${error.message}`);
     const hash = job.data.txCreation;
     const retry = job.attemptsMade;
     try {
@@ -563,11 +602,9 @@ export class NFTsCheckProcessor {
             status: TX_STATUS.FAILED,
           },
         });
-      console.log(`Updated status to FAILED for txCreationHash: ${hash}`);
+      logger.info(`Updated status to FAILED for txCreationHash: ${hash}`);
     } catch (prismaError) {
-      console.error(
-        `Error updating status in database: ${prismaError.message}`,
-      );
+      logger.error(`Error updating status in database: ${prismaError.message}`);
     }
   }
 
