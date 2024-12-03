@@ -48,14 +48,14 @@ export class ProjectProcessor {
         projectId: id,
       },
     });
-    console.log(res);
+    logger.info(res);
     for (let i = 0; i < res.length - 1; i++) {
       await this.scheduleJob(
         'transfer-next-round',
         { address1: res[i].address, address2: res[i + 1].address },
         res[i].end.getTime(),
       );
-      console.log(`set for round ${i} at ${res[i].end.getTime()}`);
+      logger.info(`set for round ${i} at ${res[i].end.getTime()}`);
     }
     // await this.testTimer();
   }
@@ -88,76 +88,79 @@ export class ProjectProcessor {
     }
   }
 
-  @Cron(CronExpression.EVERY_5_SECONDS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async addWhitelist() {
-    // TODO: Fetch data
-    // TODO: save last whitelisted to redis
-    // TODO: call smartcontract to whitelist
-    let lastId = await this.redisClient.redisGetSet.get('lastFetchedId');
-    let continueFetching = true;
-    console.log('last id: ', lastId);
-    if (!lastId) {
-      lastId = null;
-    }
+    try {
+      // TODO: Fetch data
+      // TODO: save last whitelisted to redis
+      // TODO: call smartcontract to whitelist
+      let lastId = await this.redisClient.redisGetSet.get('lastFetchedId');
+      let continueFetching = true;
+      if (!lastId) {
+        lastId = null;
+      }
 
-    while (continueFetching) {
-      const addresses = [];
-      try {
-        const response = await axios.get(
-          'https://treasury-hunt.memetaverse.club/api/v1/treasuries/d8fd0f3a-2908-45b3-8f2a-354abfba3c90/whitelist-users',
-          {
-            params: { limit: 5, cursor: lastId },
-          },
-        );
-        const data = response.data;
-
-        if (data.rows.length > 0) {
-          const filteredData = (data.rows as any[]).filter(
-            (item) => item.id !== lastId,
+      while (continueFetching) {
+        const addresses = [];
+        try {
+          const response = await axios.get(
+            'https://treasury-hunt.memetaverse.club/api/v1/treasuries/d8fd0f3a-2908-45b3-8f2a-354abfba3c90/whitelist-users',
+            {
+              params: { limit: 5, cursor: lastId },
+            },
           );
-          addresses.push(...filteredData);
+          const data = response.data;
 
-          lastId = data.rows[data.rows.length - 1].id;
-          await this.redisClient.set(
-            'lastFetchedId',
-            lastId,
-            Number.MAX_SAFE_INTEGER,
-          );
-          if (!data.pageInfo.hasNextPage || data.rows.length === 1) {
-            continueFetching = false;
+          if (data.rows.length > 0) {
+            const filteredData = (data.rows as any[]).filter(
+              (item) => item.id !== lastId,
+            );
+            addresses.push(...filteredData);
+
+            lastId = data.rows[data.rows.length - 1].id;
             await this.redisClient.set(
               'lastFetchedId',
-              parseInt(lastId) + 1,
+              lastId,
               Number.MAX_SAFE_INTEGER,
             );
+            if (!data.pageInfo.hasNextPage || data.rows.length === 1) {
+              continueFetching = false;
+              await this.redisClient.set(
+                'lastFetchedId',
+                parseInt(lastId) + 1,
+                Number.MAX_SAFE_INTEGER,
+              );
+            }
           }
-        }
-        try {
-          if (addresses.length > 0) {
-            const stakingContract = new ethers.Contract(
-              MemetaverseAddr,
-              MemetaverseABI,
-              this.wallet,
-            );
-            const extractedAddr = addresses.map((i) => i.ethAddress);
-            console.log('eth add: ', extractedAddr);
-            const tx = await stakingContract.addWhitelistBatch(
-              extractedAddr,
-              extractedAddr.map((i) => true),
-              {
-                gasLimit: 500000,
-              },
-            );
-            await tx.wait();
+          try {
+            if (addresses.length > 0) {
+              const stakingContract = new ethers.Contract(
+                MemetaverseAddr,
+                MemetaverseABI,
+                this.wallet,
+              );
+              const extractedAddr = addresses.map((i) => i.ethAddress);
+              if (extractedAddr && extractedAddr?.length > 0) {
+                const tx = await stakingContract.addWhitelistBatch(
+                  extractedAddr,
+                  extractedAddr.map((i) => true),
+                  {
+                    gasLimit: 500000,
+                  },
+                );
+                await tx.wait();
+              }
+            }
+          } catch (err) {
+            throw new Error(err);
           }
-        } catch (err) {
-          console.log('error nè: ', err);
-          throw new Error(err);
+        } catch (error) {
+          throw new Error('failed');
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-        throw new Error('failed');
       }
+      logger.info('Add White List Memeverse Successful');
+    } catch (error) {
+      logger.error('Add White List Memeverse Failed', error.message);
     }
   }
 

@@ -50,7 +50,6 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
 
   @Process('update-floor-price')
   private async updateFloorPrice(job: Job<FloorPriceProcess>) {
-    console.log(job.data);
     await OtherCommon.delay(5000);
     await this.handleUpdateFloorPrice(job.data.address);
   }

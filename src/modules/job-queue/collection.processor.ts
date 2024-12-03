@@ -14,40 +14,91 @@ import { Cron, CronExpression } from '@nestjs/schedule';
 import subgraphServiceCommon from '../helper/subgraph-helper.service';
 import { RedisSubscriberService } from './redis.service';
 import { logger } from 'src/commons';
+import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
+import { OnModuleInit } from '@nestjs/common';
 interface SyncCollection {
   txCreation: string;
   type: 'ERC721' | 'ERC1155';
 }
 
 @Processor(QUEUE_NAME_COLLECTION)
-export class CollectionsCheckProcessor {
+export class CollectionsCheckProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly redisService: RedisSubscriberService,
+    private dynamicScheduleService: DynamicScheduleService,
   ) {}
+
+  private pendingCollectionJob = 'handlePendingCollectionJob';
+  private isCollectionJobRunning = false;
 
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  onModuleInit() {
+    //Initialize the dynamic job with default cron time
+    this.dynamicScheduleService.addDynamicCronJob(
+      this.pendingCollectionJob,
+      CronExpression.EVERY_10_SECONDS,
+      this.handlePendingCollection.bind(this),
+    );
+  }
+
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handlePendingCollection() {
-    const pendingCollections = await this.prisma.collection.findMany({
-      where: {
-        OR: [{ status: TX_STATUS.PENDING }],
-      },
-    });
-    for (let i = 0; i < pendingCollections.length; i++) {
-      // await this.crawlNftInfoToDbSingle(
-      //   pendingNfts[i],
-      //   pendingNfts[i].collection,
-      // );
-      await this.getAndSetCollectionStatus(
-        pendingCollections[i].txCreationHash,
-        pendingCollections[i].type,
+    try {
+      if (this.isCollectionJobRunning) {
+        logger.warn(`Task is already running, skipping execution`);
+        return;
+      }
+
+      this.isCollectionJobRunning = true; // Đánh dấu task đang chạy
+
+      const batchSize = 100;
+      let offset = 0;
+      let hasMore = true;
+      while (hasMore) {
+        const pendingCollections = await this.prisma.collection.findMany({
+          where: {
+            OR: [{ status: TX_STATUS.PENDING }],
+          },
+          take: batchSize,
+          skip: offset,
+        });
+        if (pendingCollections?.length > 0) {
+          await Promise.allSettled(
+            pendingCollections.map(async (collection) => {
+              try {
+                await this.getAndSetCollectionStatus(
+                  collection.txCreationHash,
+                  collection.type,
+                );
+              } catch (error) {
+                await this.handleCollectionSyncFailed(
+                  collection.txCreationHash,
+                );
+              }
+            }),
+          );
+          offset += batchSize;
+        } else {
+          hasMore = false;
+        }
+        this.dynamicScheduleService.adjustJobSchedule(
+          this.pendingCollectionJob,
+          pendingCollections.length,
+        );
+      }
+      logger.info(`Sync Collection Pending Successfully`);
+    } catch (error) {
+      logger.error(
+        `Sync data Pending Collection Fail: ${JSON.stringify(error)}`,
       );
+    } finally {
+      this.isCollectionJobRunning = false; // Đánh dấu task đã kết thúc
     }
   }
   @Process('collection-create')
@@ -100,7 +151,6 @@ export class CollectionsCheckProcessor {
       };
       try {
         const response = await sdk.GetCollections1155(variables);
-        console.log(response);
         if (response.erc1155Contracts.length > 0) {
           await this.prisma.collection.update({
             where: {
@@ -179,6 +229,26 @@ export class CollectionsCheckProcessor {
     } catch (error) {
       logger.error(
         `HandleExternalCollection Fail 10 seconds: ${JSON.stringify(error)}`,
+      );
+    }
+  }
+
+  async handleCollectionSyncFailed(hash: string) {
+    try {
+      await this.prisma.collection.update({
+        where: {
+          txCreationHash: hash,
+        },
+        data: {
+          status: TX_STATUS.FAILED,
+        },
+      });
+      logger.info(
+        `handleCollectionSync status to FAILED for txCreationHash: ${hash}`,
+      );
+    } catch (prismaError) {
+      logger.error(
+        `Error updating status in database: ${JSON.stringify(prismaError)}`,
       );
     }
   }

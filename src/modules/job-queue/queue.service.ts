@@ -26,7 +26,6 @@ export class QueueService {
     timeout: 10000,
     // You can add other default settings here
   };
-
   constructor(
     @InjectQueue(QUEUE_NAME_COLLECTION) private collectionQueue: Queue,
     @InjectQueue(QUEUE_COLLECTION_UTILS) private collectionUtilsQueue: Queue,
@@ -38,31 +37,24 @@ export class QueueService {
     @InjectQueue(QUEUE_NAME_MARKETPLACE_STATUS) private marketplaceQueue: Queue,
     @InjectQueue(QUEUE_NAME_QUOTE_TOKEN_ACCEPT) private quoteTokenQueue: Queue,
   ) {}
-
   async addJobToQueue(queue: Queue, jobType: string, jobData: any) {
     await queue.add(jobType, jobData, this.defaultJobOptions);
   }
-
   async addCollectionJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.collectionQueue, jobType, jobData);
   }
-
   async addNftJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.nftQueue, jobType, jobData);
   }
-
   async addIPFSJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.ipfsQueue, jobType, jobData);
   }
-
   async addProjectJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.projectQueue, jobType, jobData);
   }
-
   async addUserJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.userQueue, jobType, jobData);
   }
-
   async addCollectionUtilsJob(jobType: string, jobData: any) {
     await this.addJobToQueue(this.collectionUtilsQueue, jobType, jobData);
   }

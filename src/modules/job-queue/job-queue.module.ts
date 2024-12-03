@@ -16,6 +16,7 @@ import { CollectionsUtilsProcessor } from './collection-utils.processor';
 import { MarketplaceStatusProcessor } from './marketplace-status.processor';
 import { QuoteTokenAcceptProcessor } from './quote-token-accept.processor';
 import { CMSProcessor } from './cms.processor';
+import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
 @Module({
   providers: [
     QueueService,
@@ -33,6 +34,7 @@ import { CMSProcessor } from './cms.processor';
     MarketplaceStatusProcessor,
     QuoteTokenAcceptProcessor,
     CMSProcessor,
+    DynamicScheduleService,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })
