@@ -141,6 +141,14 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
             orderStatus: status,
           },
         });
+
+        if (status == ORDERSTATUS.FILLED) {
+          await this.updateVolumeCollection(
+            checkExists.collectionId,
+            checkExists.priceNum,
+            checkExists.quantity,
+          );
+        }
       }
     } catch (error) {
       logger.error(`updateOrder: ${JSON.stringify(error)}`);
@@ -170,6 +178,36 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       return user;
     } catch (error) {
       console.log(error);
+    }
+  }
+
+  async updateVolumeCollection(
+    collectionId: string,
+    price: number,
+    quantity: number,
+  ) {
+    try {
+      const collection = await this.prisma.collection.findUnique({
+        where: {
+          id: collectionId,
+        },
+      });
+      if (!collection) {
+        throw new Error('Collection not found');
+      }
+      const vol = collection.vol + price * quantity;
+      await this.prisma.collection.update({
+        where: {
+          id: collection.id,
+        },
+        data: {
+          vol: vol,
+          volumeWei: `${vol * 10 ** 18}`,
+        },
+      });
+      logger.info(`Update Volume Collection Successfully`);
+    } catch (error) {
+      logger.error(`updateVolumeCollection: ${JSON.stringify(error)}`);
     }
   }
 
