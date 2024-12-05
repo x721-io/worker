@@ -22,15 +22,18 @@ import { logger } from 'src/commons';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
+
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
   txCreation?: string;
 }
+
 @Processor(QUEUE_NAME_NFT)
 export class NFTsCheckProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
   private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
+  private readonly CRAWLER_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
 
   constructor(
     private readonly prisma: PrismaService,
@@ -42,6 +45,9 @@ export class NFTsCheckProcessor implements OnModuleInit {
 
   private pendingNFTJob = 'handlePendingNFTJob';
   private isNFTJobRunning = false;
+  private isNFTCrawlerRunning = false;
+  private crawlerTimeout: NodeJS.Timeout;
+
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
@@ -58,7 +64,34 @@ export class NFTsCheckProcessor implements OnModuleInit {
     );
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_30_SECONDS)
+  async handleNFTAssetCrawling() {
+    try {
+      if (this.isNFTCrawlerRunning) {
+        logger.warn('NFT Asset Crawler is already running, skipping execution');
+        return;
+      }
+
+      this.isNFTCrawlerRunning = true;
+
+      // Set a timeout to force-reset the flag if the job takes too long
+      this.crawlerTimeout = setTimeout(() => {
+        if (this.isNFTCrawlerRunning) {
+          logger.error('NFT Asset Crawler timed out, resetting flag');
+          this.isNFTCrawlerRunning = false;
+        }
+      }, this.CRAWLER_TIMEOUT);
+
+      await this.NftCrawler.crawlNFTAssets();
+      logger.info('NFT Asset Crawler completed successfully');
+    } catch (error) {
+      logger.error(`Error in NFT Asset Crawler: ${error.message}`);
+    } finally {
+      clearTimeout(this.crawlerTimeout);
+      this.isNFTCrawlerRunning = false;
+    }
+  }
+
   async handlePendingFailedNft() {
     try {
       if (this.isNFTJobRunning) {
@@ -151,7 +184,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
     const { txCreation: hash, type, collectionId } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    // console.log('let see: ', hash, type);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
       txCreation: hash,
     };
@@ -206,12 +238,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
   }
 
   private async processAndSaveNft(input: NftData[], collection: Collection) {
-    // const getMetadata = Promise.all(
-    //   input.map(async (i) => {
-    //     const uri = await this.common.fetchTokenUri(i.tokenUri);
-    //     return uri;
-    //   }),
-    // );
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
@@ -271,7 +297,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
           }),
         },
       });
-      // }
     }
   }
 
@@ -309,7 +334,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                 erc721Tokens[i].tokenId.toString(),
                 erc721Tokens[i].contract.id,
               );
-              // TODO: fetch metadata
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
@@ -323,7 +347,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                       };
                     })
                   : null;
-              // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
                   id: erc721Tokens[i].tokenId.toString(),
@@ -377,7 +400,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                 erc1155Tokens[i].tokenId.toString(),
                 erc1155Tokens[i].contract.id,
               );
-              // TODO: fetch metadata
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
@@ -390,7 +412,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                       };
                     })
                   : null;
-              // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
                   id: erc1155Tokens[i].tokenId.toString(),
@@ -428,6 +449,7 @@ export class NFTsCheckProcessor implements OnModuleInit {
       throw err;
     }
   }
+
   private async crawlNftInfoToDbSingle(tokenId: NFT, collectionId: Collection) {
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
@@ -446,7 +468,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
             normId,
             collectionId.address,
           );
-          // TODO: fetch metadata
           const metadata: Metadata = await this.common.fetchTokenUri(
             uri.tokenUri,
           );
@@ -476,7 +497,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
               },
             },
           });
-          // }
           return erc721Tokens;
         } else {
           console.error('NO TX FOUND YET');
@@ -499,11 +519,9 @@ export class NFTsCheckProcessor implements OnModuleInit {
             normId,
             collectionId.address,
           );
-          // TODO: fetch metadata
           const metadata: Metadata = await this.common.fetchTokenUri(
             uri.tokenUri,
           );
-          // TODO: create nft
           await this.prisma.nFT.update({
             where: {
               id_collectionId: {
@@ -528,7 +546,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
               },
             },
           });
-          // }
           return erc1155Tokens;
         } else {
           console.error('NO TX FOUND YET');
@@ -584,8 +601,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
     }
     return { normId, u2uId };
   }
-
-  // TODO: BUY SELL TRANSFER BID EVENT
 
   @OnQueueFailed()
   private async onNFTCreateFail(job: Job<any>, error: Error) {
