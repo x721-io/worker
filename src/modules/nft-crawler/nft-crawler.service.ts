@@ -3,12 +3,15 @@ import { abi as abi721 } from 'abis/ERC721Proxy.json';
 import { abi as abi1155 } from 'abis/ERC1155Proxy.json';
 import { ethers } from 'ethers';
 import { GraphQlcallerService } from '../graph-qlcaller/graph-qlcaller.service';
-import { CONTRACT_TYPE } from '@prisma/client';
+import { CONTRACT_TYPE, TX_STATUS } from '@prisma/client';
 import {
   Multicall,
   ContractCallResults,
   ContractCallContext,
 } from 'ethereum-multicall';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { logger } from 'src/commons';
+import { NFTDataResponse } from '../job-queue/nft.processor';
 
 export interface NftData {
   tokenId: string;
@@ -16,9 +19,14 @@ export interface NftData {
   contractType: CONTRACT_TYPE;
   txCreation?: string;
 }
+
 @Injectable()
 export class NftCrawlerService {
-  constructor(private readonly graphQl: GraphQlcallerService) {}
+  constructor(
+    private readonly graphQl: GraphQlcallerService,
+    private readonly prisma: PrismaService,
+  ) {}
+
   private provider = new ethers.providers.JsonRpcProvider(process.env.RPC_URL);
 
   private multicall = new Multicall({
@@ -26,6 +34,45 @@ export class NftCrawlerService {
     tryAggregate: true,
     multicallCustomContractAddress: process.env.MULTICALL_CONTRACT,
   });
+
+  async processNFTAsset(nft: NFTDataResponse) {
+    try {
+      const { id, tokenId, collectionAddress, metadata } = nft;
+
+      const collection = await this.prisma.collection.findUnique({
+        where: {
+          address: collectionAddress,
+        },
+      });
+
+      if (!collection) {
+        return;
+      }
+
+      await this.prisma.nFT.upsert({
+        where: {
+          id_collectionId: {
+            id: tokenId,
+            collectionId: collection.id,
+          },
+        },
+        update: {},
+        create: {
+          id: tokenId,
+          name: metadata?.metadata.name || tokenId,
+          description: metadata?.metadata.description || '',
+          image: metadata?.metadata.image || '',
+          tokenUri: metadata?.S3Url || '',
+          status: TX_STATUS.SUCCESS,
+          txCreationHash: id,
+          collectionId: collection.id,
+        },
+      });
+    } catch (error) {
+      logger.error(`Error processing NFT asset ${nft.id}:`, error);
+      throw error;
+    }
+  }
 
   async getSingleErc721NftData(
     tokenId: string,
@@ -44,9 +91,10 @@ export class NftCrawlerService {
         contractType: 'ERC721',
       };
     } catch (err) {
-      console.error('Error in ERC-721:', tokenId, err);
+      logger.error('Error in ERC-721:', tokenId, err);
     }
   }
+
   async getSingleErc1155NftData(
     tokenId: string,
     contractAddress: string,
@@ -64,16 +112,11 @@ export class NftCrawlerService {
         contractType: 'ERC1155',
       };
     } catch (err) {
-      console.error('Error in ERC-1155:', tokenId, err);
+      logger.error('Error in ERC-1155:', tokenId, err);
     }
   }
 
   async getAllErc721NftData(contractAddress: string): Promise<NftData[]> {
-    // const erc721Contract = new ethers.Contract(
-    //   contractAddress,
-    //   abi721,
-    //   this.provider,
-    // );
     const nfts = [];
     let skip = 0;
     const first = 1000;
@@ -102,23 +145,6 @@ export class NftCrawlerService {
         await this.multicall.call(contractCallContext);
 
       const fetchedTokensCount = erc721Tokens.length;
-      // for (let i = 0; i < fetchedTokensCount; i++) {
-      //   try {
-      //     const tokenUri = await erc721Contract.tokenURI(
-      //       erc721Tokens[i].tokenId,
-      //     );
-      //     nfts.push({
-      //       tokenId: erc721Tokens[i].tokenId,
-      //       tokenUri,
-      //       contractType: 'ERC721',
-      //       txCreation: erc721Tokens[i].txCreation,
-      //     });
-      //   } catch (err) {
-      //     console.log(err);
-      //     break;
-      //   }
-      // }
-      console.log(fetchedTokensCount);
       erc721Tokens.forEach((token) => {
         const result = results.results[`tokenURI-${token.tokenId}`];
         if (result && result.callsReturnContext[0].success) {
@@ -134,7 +160,7 @@ export class NftCrawlerService {
       if (fetchedTokensCount < first) {
         hasMore = false;
       } else {
-        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
+        skip += fetchedTokensCount;
       }
     }
     return nfts;
@@ -184,7 +210,7 @@ export class NftCrawlerService {
       if (fetchedTokensCount < first) {
         hasMore = false;
       } else {
-        skip += fetchedTokensCount; // Increment skip by the number of tokens fetched
+        skip += fetchedTokensCount;
       }
     }
     return nfts;
