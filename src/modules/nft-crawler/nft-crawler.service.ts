@@ -62,7 +62,7 @@ export class NftCrawlerService {
           name: metadata?.metadata.name || tokenId,
           description: metadata?.metadata.description || '',
           image: metadata?.metadata.image || '',
-          tokenUri: metadata?.S3Url || '',
+          tokenUri: metadata?.IPFSUrl || '',
           status: TX_STATUS.SUCCESS,
           txCreationHash: id,
           collectionId: collection.id,
