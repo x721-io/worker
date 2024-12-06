@@ -1,4 +1,4 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import {
   GetStakingQueryVariables,
   Get1155NfTsQueryVariables,
@@ -16,12 +16,13 @@ import { Metadata } from 'src/commons/types/Trait.type';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
 import OtherCommon from 'src/commons/Other.common';
-import { ApiCallerService } from '../api-caller/api-caller.service';
 import { validate as isValidUUID } from 'uuid';
 import { logger } from 'src/commons';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
+import { RedisSubscriberService } from './redis.service';
+import axios from 'axios';
 
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
@@ -29,23 +30,69 @@ interface NftCrawlRequest {
   txCreation?: string;
 }
 
+export interface NFTDataResponse {
+  id: string;
+  name: string;
+  type: string;
+  tokenId: string;
+  description: string;
+  collectionAddress: string;
+  media: Media;
+  metadata: Media;
+  gameInfo: GameInfo;
+  createdAt: string;
+}
+
+interface GameInfo {
+  id: string;
+  name: string;
+}
+
+interface Media {
+  id: string;
+  S3Url?: string;
+  IPFSUrl: string;
+  AssetId: string;
+  metadata?: Trait;
+}
+
+interface Trait {
+  name: string;
+  image: string;
+  description: string;
+  external_url: string;
+}
+
+interface NFTAssetResponse {
+  data: NFTDataResponse[];
+  paging: {
+    page: number;
+    limit: number;
+    hasNext: boolean;
+  };
+}
+
 @Processor(QUEUE_NAME_NFT)
 export class NFTsCheckProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
   private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
-  private readonly CRAWLER_TIMEOUT = 5 * 60 * 1000; // 5 minutes in milliseconds
+
+  private readonly LAST_CRAWL_TIMESTAMP_KEY = 'layerg:last_crawl_timestamp';
+  private readonly API_BASE_URL = 'http://localhost:3000';
+
+  private pendingLayergNftJob = 'handleLayergNftJob';
+  private isLayergNftJobRunning = false;
 
   constructor(
     private readonly prisma: PrismaService,
     private readonly NftCrawler: NftCrawlerService,
     private readonly common: CommonService,
-    private readonly api: ApiCallerService,
     private dynamicScheduleService: DynamicScheduleService,
+    private readonly redisService: RedisSubscriberService,
   ) {}
 
   private pendingNFTJob = 'handlePendingNFTJob';
   private isNFTJobRunning = false;
-  private isNFTCrawlerRunning = false;
   private crawlerTimeout: NodeJS.Timeout;
 
   private getGraphqlClient() {
@@ -62,33 +109,65 @@ export class NFTsCheckProcessor implements OnModuleInit {
       CronExpression.EVERY_10_SECONDS,
       this.handlePendingFailedNft.bind(this),
     );
+
+    this.dynamicScheduleService.addDynamicCronJob(
+      this.pendingLayergNftJob,
+      CronExpression.EVERY_10_SECONDS,
+      this.crawlNFTAssets.bind(this),
+    );
   }
 
-  @Cron(CronExpression.EVERY_30_SECONDS)
-  async handleNFTAssetCrawling() {
+  async crawlNFTAssets() {
     try {
-      if (this.isNFTCrawlerRunning) {
-        logger.warn('NFT Asset Crawler is already running, skipping execution');
+      if (this.isLayergNftJobRunning) {
+        logger.warn(`Task is already running, skipping execution`);
         return;
       }
+      this.isLayergNftJobRunning = true; // Đánh dấu task đang chạy
+      let lastTimestamp = await this.redisService.redisGetSet.get(
+        this.LAST_CRAWL_TIMESTAMP_KEY,
+      );
+      if (!lastTimestamp) {
+        lastTimestamp = '2024-12-03T08:14:37.90097Z';
+      }
 
-      this.isNFTCrawlerRunning = true;
+      let currentPage = 1;
+      const limit = 20;
+      let hasNext = true;
 
-      // Set a timeout to force-reset the flag if the job takes too long
-      this.crawlerTimeout = setTimeout(() => {
-        if (this.isNFTCrawlerRunning) {
-          logger.error('NFT Asset Crawler timed out, resetting flag');
-          this.isNFTCrawlerRunning = false;
+      while (hasNext) {
+        const url = `${
+          this.API_BASE_URL
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+        }/api/nft/assets?created_at=${lastTimestamp.replaceAll(
+          `"`,
+          '',
+        )}&limit=${limit}&page=${currentPage}`;
+        console.log(url);
+        const response = await axios.get<NFTAssetResponse>(url);
+        const { data, paging } = response.data;
+        const length = data.length;
+        if (length > 0) {
+          for (const nft of data) {
+            await this.NftCrawler.processNFTAsset(nft);
+          }
+
+          const newestNFT = data[length - 1];
+          await this.redisService.set(
+            this.LAST_CRAWL_TIMESTAMP_KEY,
+            newestNFT.createdAt,
+          );
         }
-      }, this.CRAWLER_TIMEOUT);
 
-      await this.NftCrawler.crawlNFTAssets();
-      logger.info('NFT Asset Crawler completed successfully');
+        hasNext = paging.hasNext;
+        currentPage++;
+      }
+      this.isLayergNftJobRunning = false;
+      return true;
     } catch (error) {
-      logger.error(`Error in NFT Asset Crawler: ${error.message}`);
-    } finally {
-      clearTimeout(this.crawlerTimeout);
-      this.isNFTCrawlerRunning = false;
+      logger.error('Error crawling NFT assets:', error);
+      throw error;
     }
   }
 

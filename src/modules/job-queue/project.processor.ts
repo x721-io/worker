@@ -1,6 +1,5 @@
 import {
   getSdk,
-  GetStakingQueryVariables,
   GetStakingToAddWhiteListQueryVariables,
 } from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
