@@ -1,4 +1,4 @@
-import { GraphQLClient, gql } from 'graphql-request';
+import { GraphQLClient } from 'graphql-request';
 import {
   GetStakingQueryVariables,
   Get1155NfTsQueryVariables,
@@ -16,32 +16,91 @@ import { Metadata } from 'src/commons/types/Trait.type';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CommonService } from '../common/common.service';
 import OtherCommon from 'src/commons/Other.common';
-import { ApiCallerService } from '../api-caller/api-caller.service';
 import { validate as isValidUUID } from 'uuid';
 import { logger } from 'src/commons';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
+import { RedisSubscriberService } from './redis.service';
+import axios from 'axios';
+
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
   txCreation?: string;
 }
+
+export interface NFTDataResponse {
+  id: string;
+  name: string;
+  type: string;
+  tokenId: string;
+  description: string;
+  collectionAddress: string;
+  media: Media;
+  metadata: Media;
+  gameInfo: GameInfo;
+  createdAt: string;
+}
+
+interface GameInfo {
+  id: string;
+  name: string;
+}
+
+interface Media {
+  id: string;
+  S3Url?: string;
+  IPFSUrl: string;
+  AssetId: string;
+  metadata?: Trait;
+}
+
+interface Trait {
+  name?: string;
+  image?: string;
+  description?: string;
+  external_url?: string;
+  attributes: Attributes[];
+}
+
+interface Attributes {
+  trait_type: string;
+  value: string | number;
+}
+
+interface NFTAssetResponse {
+  data: NFTDataResponse[];
+  paging: {
+    page: number;
+    limit: number;
+    hasNext: boolean;
+  };
+}
+
 @Processor(QUEUE_NAME_NFT)
 export class NFTsCheckProcessor implements OnModuleInit {
   private readonly endpoint = process.env.SUBGRAPH_URL;
   private readonly endpointStaking = process.env.SUBGRAPH_URL_STAKING;
 
+  private readonly LAST_CRAWL_TIMESTAMP_KEY = 'layerg:last_crawl_timestamp';
+  private readonly API_BASE_URL = process.env.LAYERG_URL;
+
+  private pendingLayergNftJob = 'handleLayergNftJob';
+  private isLayergNftJobRunning = false;
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly NftCrawler: NftCrawlerService,
     private readonly common: CommonService,
-    private readonly api: ApiCallerService,
     private dynamicScheduleService: DynamicScheduleService,
+    private readonly redisService: RedisSubscriberService,
   ) {}
 
   private pendingNFTJob = 'handlePendingNFTJob';
   private isNFTJobRunning = false;
+  private crawlerTimeout: NodeJS.Timeout;
+
   private getGraphqlClient() {
     return new GraphQLClient(this.endpoint);
   }
@@ -56,9 +115,68 @@ export class NFTsCheckProcessor implements OnModuleInit {
       CronExpression.EVERY_10_SECONDS,
       this.handlePendingFailedNft.bind(this),
     );
+
+    this.dynamicScheduleService.addDynamicCronJob(
+      this.pendingLayergNftJob,
+      CronExpression.EVERY_10_SECONDS,
+      this.crawlNFTAssets.bind(this),
+    );
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
+  async crawlNFTAssets() {
+    try {
+      if (this.isLayergNftJobRunning) {
+        logger.warn(`Task is already running, skipping execution`);
+        return;
+      }
+      this.isLayergNftJobRunning = true; // Đánh dấu task đang chạy
+      let lastTimestamp = await this.redisService.redisGetSet.get(
+        this.LAST_CRAWL_TIMESTAMP_KEY,
+      );
+      if (!lastTimestamp) {
+        lastTimestamp = '2024-12-03T08:14:37.90097Z';
+      }
+
+      let currentPage = 1;
+      const limit = 20;
+      let hasNext = true;
+
+      while (hasNext) {
+        const url = `${
+          this.API_BASE_URL
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+        }/api/nft/assets?created_at=${lastTimestamp.replaceAll(
+          `"`,
+          '',
+        )}&limit=${limit}&page=${currentPage}`;
+        console.log(url);
+        const response = await axios.get<NFTAssetResponse>(url);
+        const { data, paging } = response.data;
+        const length = data.length;
+        if (length > 0) {
+          for (const nft of data) {
+            await this.NftCrawler.processNFTAsset(nft);
+          }
+
+          const newestNFT = data[length - 1];
+          await this.redisService.set(
+            this.LAST_CRAWL_TIMESTAMP_KEY,
+            newestNFT.createdAt,
+          );
+        }
+
+        hasNext = paging.hasNext;
+        currentPage++;
+      }
+      this.isLayergNftJobRunning = false;
+      return true;
+    } catch (error) {
+      logger.error('Error crawling NFT assets:', error);
+      throw error;
+    }
+  }
+
   async handlePendingFailedNft() {
     try {
       if (this.isNFTJobRunning) {
@@ -151,7 +269,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
     const { txCreation: hash, type, collectionId } = job.data;
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
-    // console.log('let see: ', hash, type);
     const variables: Get721NfTsQueryVariables | Get1155NfTsQueryVariables = {
       txCreation: hash,
     };
@@ -206,12 +323,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
   }
 
   private async processAndSaveNft(input: NftData[], collection: Collection) {
-    // const getMetadata = Promise.all(
-    //   input.map(async (i) => {
-    //     const uri = await this.common.fetchTokenUri(i.tokenUri);
-    //     return uri;
-    //   }),
-    // );
     const metadataArray: Metadata[] = await this.common.processInBatches(
       input,
       parseInt(process.env.BATCH_PROCESS),
@@ -271,7 +382,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
           }),
         },
       });
-      // }
     }
   }
 
@@ -309,7 +419,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                 erc721Tokens[i].tokenId.toString(),
                 erc721Tokens[i].contract.id,
               );
-              // TODO: fetch metadata
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
@@ -323,7 +432,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                       };
                     })
                   : null;
-              // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
                   id: erc721Tokens[i].tokenId.toString(),
@@ -377,7 +485,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                 erc1155Tokens[i].tokenId.toString(),
                 erc1155Tokens[i].contract.id,
               );
-              // TODO: fetch metadata
               const metadata: Metadata = await this.common.fetchTokenUri(
                 uri.tokenUri,
               );
@@ -390,7 +497,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
                       };
                     })
                   : null;
-              // TODO: create nft
               await this.prisma.nFT.create({
                 data: {
                   id: erc1155Tokens[i].tokenId.toString(),
@@ -428,6 +534,7 @@ export class NFTsCheckProcessor implements OnModuleInit {
       throw err;
     }
   }
+
   private async crawlNftInfoToDbSingle(tokenId: NFT, collectionId: Collection) {
     const client = this.getGraphqlClient();
     const sdk = getSdk(client);
@@ -446,7 +553,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
             normId,
             collectionId.address,
           );
-          // TODO: fetch metadata
           const metadata: Metadata = await this.common.fetchTokenUri(
             uri.tokenUri,
           );
@@ -476,7 +582,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
               },
             },
           });
-          // }
           return erc721Tokens;
         } else {
           console.error('NO TX FOUND YET');
@@ -499,11 +604,9 @@ export class NFTsCheckProcessor implements OnModuleInit {
             normId,
             collectionId.address,
           );
-          // TODO: fetch metadata
           const metadata: Metadata = await this.common.fetchTokenUri(
             uri.tokenUri,
           );
-          // TODO: create nft
           await this.prisma.nFT.update({
             where: {
               id_collectionId: {
@@ -528,7 +631,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
               },
             },
           });
-          // }
           return erc1155Tokens;
         } else {
           console.error('NO TX FOUND YET');
@@ -584,8 +686,6 @@ export class NFTsCheckProcessor implements OnModuleInit {
     }
     return { normId, u2uId };
   }
-
-  // TODO: BUY SELL TRANSFER BID EVENT
 
   @OnQueueFailed()
   private async onNFTCreateFail(job: Job<any>, error: Error) {

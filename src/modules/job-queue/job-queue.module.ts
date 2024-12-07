@@ -17,6 +17,7 @@ import { MarketplaceStatusProcessor } from './marketplace-status.processor';
 import { QuoteTokenAcceptProcessor } from './quote-token-accept.processor';
 import { CMSProcessor } from './cms.processor';
 import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
+import { SchedulerRegistry } from '@nestjs/schedule';
 @Module({
   providers: [
     QueueService,
@@ -35,6 +36,7 @@ import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
     QuoteTokenAcceptProcessor,
     CMSProcessor,
     DynamicScheduleService,
+    SchedulerRegistry,
   ],
   imports: [BullConfigModule, ApiCallerModule],
 })
