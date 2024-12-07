@@ -49,6 +49,8 @@ export class NftCrawlerService {
         return;
       }
 
+      const attributes = metadata?.metadata?.attributes || [];
+
       await this.prisma.nFT.upsert({
         where: {
           id_collectionId: {
@@ -66,6 +68,17 @@ export class NftCrawlerService {
           status: TX_STATUS.SUCCESS,
           txCreationHash: id,
           collectionId: collection.id,
+          Trait: {
+            create:
+              attributes.length > 0
+                ? attributes.map((attribute) => ({
+                    trait_type: attribute.trait_type,
+                    value: attribute.value.toString(),
+                    nftId: tokenId,
+                    collectionId: collection.id,
+                  }))
+                : undefined,
+          },
         },
       });
     } catch (error) {

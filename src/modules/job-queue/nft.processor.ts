@@ -57,10 +57,16 @@ interface Media {
 }
 
 interface Trait {
-  name: string;
-  image: string;
-  description: string;
-  external_url: string;
+  name?: string;
+  image?: string;
+  description?: string;
+  external_url?: string;
+  attributes: Attributes[];
+}
+
+interface Attributes {
+  trait_type: string;
+  value: string | number;
 }
 
 interface NFTAssetResponse {
