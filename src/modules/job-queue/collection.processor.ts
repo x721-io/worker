@@ -196,7 +196,7 @@ export class CollectionsCheckProcessor implements OnModuleInit {
       );
     }
   }
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleCountExternalCollection() {
     try {
       const externalCollections = await this.prisma.collection.findMany({

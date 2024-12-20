@@ -14,10 +14,10 @@ import { OnModuleInit } from '@nestjs/common';
 import OtherCommon from 'src/commons/Other.common';
 import MetricCommon from 'src/commons/Metric.common';
 import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
-import { CONTRACT_TYPE, Prisma, TX_STATUS } from '@prisma/client';
+import { CONTRACT_TYPE, ORDERSTATUS, Prisma, TX_STATUS } from '@prisma/client';
 import subgraphServiceCommon from '../helper/subgraph-helper.service';
 interface FloorPriceProcess {
-  address: string;
+  data: string;
 }
 
 interface itemSubgraph {
@@ -51,7 +51,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
   @Process('update-floor-price')
   private async updateFloorPrice(job: Job<FloorPriceProcess>) {
     await OtherCommon.delay(5000);
-    await this.handleUpdateFloorPrice(job.data.address);
+    await this.handleUpdateFloorPrice(job.data as any);
   }
 
   async onModuleInit() {
@@ -107,7 +107,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     }
   }
 
-  @Cron(CronExpression.EVERY_10_SECONDS)
+  // @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncCollectionExtend() {
     try {
       const collectionExtend = await this.getCollectionsToExtend();
@@ -195,7 +195,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       logger.error(`handleSyncCollectionExtend: ${error}`);
     }
   }
-  @Cron(CronExpression.EVERY_2_HOURS)
+  // @Cron(CronExpression.EVERY_2_HOURS)
   async handleSyncFloorPrice() {
     try {
       const batchSize = 100;
@@ -217,9 +217,6 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
               await this.handleUpdateFloorPrice(item.address);
             }),
           );
-          // for (const item of listCollection) {
-          //   // await this.handleUpdateFloorPrice(item.address);
-          // }
           offset += batchSize;
         } else {
           hasMore = false;
@@ -242,76 +239,50 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       console.error('Collection not found');
       return;
     }
-    // for (let i = 0; i < collections.length; i++) {
-    let skip = 0;
     let hasMore = true;
+    const limit = 1000;
+    let skip = 0;
     let floorPrice = BigInt(0);
-    const first = 1000;
-    const client = this.getGraphqlClient();
-    const sdk = getSdk(client);
-    if (collection.type === 'ERC721') {
-      while (hasMore) {
-        const variables: GetNfTsSelling721QueryVariables = {
-          first,
-          skip,
-          collection: collection.address,
-        };
-        const response = await sdk.GetNFTsSelling721(variables);
-        if (response.marketEvent721S.length > 0) {
-          for (let i = 0; i < response.marketEvent721S.length; i++) {
-            if (floorPrice === BigInt(0)) {
-              floorPrice = response.marketEvent721S[i].price;
-            } else {
-              if (
-                BigInt(response.marketEvent721S[i].price) < BigInt(floorPrice)
-              ) {
-                floorPrice = response.marketEvent721S[i].price;
-              }
-            }
+    const currentDate = Math.floor(Date.now() / 1000);
+    while (hasMore) {
+      const listOrder = await this.prisma.order.findMany({
+        where: {
+          orderStatus: {
+            in: [ORDERSTATUS.FILLED, ORDERSTATUS.OPEN],
+          },
+          collectionId: collection.id,
+          start: {
+            lte: currentDate,
+          },
+          end: {
+            gte: currentDate,
+          },
+        },
+        skip: skip,
+        take: limit,
+      });
+      if (listOrder?.length > 0) {
+        for (const o of listOrder) {
+          const currentPrice = BigInt(o?.price || 0);
+          if (BigInt(floorPrice) === BigInt(0) || currentPrice < floorPrice) {
+            floorPrice = currentPrice;
           }
-          skip += first;
-        } else {
-          hasMore = false;
         }
+        skip += limit;
+      } else {
+        hasMore = false; // No more data to fetch
       }
+      await this.prisma.collection.update({
+        where: {
+          address,
+        },
+        data: {
+          floorPrice: BigInt(floorPrice) / BigInt(10 ** 18),
+          floor: parseFloat(`${BigInt(floorPrice) / BigInt(10 ** 18)}`),
+          floorWei: floorPrice.toString(),
+        },
+      });
     }
-    if (collection.type === 'ERC1155') {
-      while (hasMore) {
-        const variables: GetNfTsSelling1155QueryVariables = {
-          first,
-          skip,
-          collection: collection.address,
-        };
-        const response = await sdk.GetNFTsSelling1155(variables);
-        if (response.marketEvent1155S.length > 0) {
-          for (let i = 0; i < response.marketEvent1155S.length; i++) {
-            if (floorPrice === BigInt(0)) {
-              floorPrice = response.marketEvent1155S[i].price;
-            } else {
-              if (
-                BigInt(response.marketEvent1155S[i].price) < BigInt(floorPrice)
-              ) {
-                floorPrice = response.marketEvent1155S[i].price;
-              }
-            }
-          }
-          skip += first;
-        } else {
-          hasMore = false;
-        }
-      }
-    }
-    await this.prisma.collection.update({
-      where: {
-        address,
-      },
-      data: {
-        floorPrice: BigInt(floorPrice) / BigInt(10 ** 18),
-        floor: parseFloat(`${BigInt(floorPrice) / BigInt(10 ** 18)}`),
-        floorWei: floorPrice.toString(),
-      },
-    });
-    return true;
   }
 
   async checkIsSync(): Promise<boolean> {
