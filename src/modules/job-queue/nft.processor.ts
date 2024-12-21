@@ -23,7 +23,8 @@ import { MetricCategory, TypeCategory } from 'src/constants/enums/Metric.enum';
 import { DynamicScheduleService } from '../helper/dynamic-schedule.service';
 import { RedisSubscriberService } from './redis.service';
 import axios from 'axios';
-
+import { SYNCDATASTATUS } from 'src/constants/enums/Order.enum';
+import HelperService from '../helper/helper.service';
 interface NftCrawlRequest {
   type: CONTRACT_TYPE;
   collectionAddress: string;
@@ -130,46 +131,55 @@ export class NFTsCheckProcessor implements OnModuleInit {
         return;
       }
       this.isLayergNftJobRunning = true; // Đánh dấu task đang chạy
-      let lastTimestamp = await this.redisService.redisGetSet.get(
-        this.LAST_CRAWL_TIMESTAMP_KEY,
+      // Get Last Proccess Timestamp in seconds prev sync
+      const dataLastSync = await HelperService.getLastSyncedItem(
+        SYNCDATASTATUS.LAYERG,
       );
-      if (!lastTimestamp) {
-        lastTimestamp = '2024-12-03T08:14:37.90097Z';
-      }
-
+      // IF Not data Sync auto get Timestamp default to Sync NFT LayerG
+      let lastTimestamp = dataLastSync
+        ? HelperService.timestampToIso(dataLastSync?.timestamp, false)
+        : HelperService.timestampToIso(
+            parseInt(process.env.DEFAULT_TIMESTAMP_LAYERG),
+            false,
+          );
+      let lastProcessedTimestamp = 0;
       let currentPage = 1;
       const limit = 20;
       let hasNext = true;
-
       while (hasNext) {
-        const url = `${
-          this.API_BASE_URL
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-        }/api/nft/assets?created_at=${lastTimestamp.replaceAll(
-          `"`,
-          '',
-        )}&limit=${limit}&page=${currentPage}`;
-        console.log(url);
+        const url = `${this.API_BASE_URL}/api/nft/assets?created_at=${lastTimestamp}&limit=${limit}&page=${currentPage}`;
         const response = await axios.get<NFTAssetResponse>(url);
         const { data, paging } = response.data;
-        const length = data.length;
-        if (length > 0) {
+        if (data.length > 0) {
           for (const nft of data) {
             await this.NftCrawler.processNFTAsset(nft);
           }
-
-          const newestNFT = data[length - 1];
-          await this.redisService.set(
-            this.LAST_CRAWL_TIMESTAMP_KEY,
-            newestNFT.createdAt,
-          );
+          const newestNFT = data[data?.length - 1];
+          lastTimestamp = newestNFT?.createdAt;
+          // After each loop for, save last item timestamp create at in seconds
+          lastProcessedTimestamp = newestNFT
+            ? HelperService.isoToTimestamp(newestNFT?.createdAt, true)
+            : parseInt(`${process.env.DEFAULT_TIMESTAMP_LAYERG}`);
         }
-
         hasNext = paging.hasNext;
         currentPage++;
       }
+      // IF Change Last Process Flat checkpoint , if not save timestamp default
+      if (lastProcessedTimestamp > 0) {
+        await HelperService.updateSyncStatus(
+          SYNCDATASTATUS.LAYERG,
+          false,
+          lastProcessedTimestamp,
+        );
+      } else {
+        await HelperService.updateSyncStatus(
+          SYNCDATASTATUS.LAYERG,
+          false,
+          parseInt(`${process.env.DEFAULT_TIMESTAMP_LAYERG}`),
+        );
+      }
       this.isLayergNftJobRunning = false;
+      logger.info(`Sync Data NFT LayerG Successfully`);
       return true;
     } catch (error) {
       logger.error('Error crawling NFT assets:', error);
