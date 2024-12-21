@@ -21,7 +21,7 @@ import OtherCommon from 'src/commons/Other.common';
 import { parse } from 'path';
 import { ORDERTRANSFER, SYNCDATASTATUS } from 'src/constants/enums/Order.enum';
 import { CollectionsUtilsProcessor } from './collection-utils.processor';
-
+import HelperService from '../helper/helper.service';
 export class UpdateOrderInput {
   sig: string;
   index: number;
@@ -88,19 +88,21 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
 
   async handleSyncDataOrderTransfer() {
     try {
-      const lastItem = await this.getLastSyncedItem(SYNCDATASTATUS.TRANSFER);
+      const lastItem = await HelperService.getLastSyncedItem(
+        SYNCDATASTATUS.TRANSFER,
+      );
       let skip = 0;
       const first = 1000;
       let hasMore = true;
       let lastProcessedTimestamp = 0;
       if (lastItem && lastItem.syncDataStatus === true) {
-        await this.updateSyncStatus(SYNCDATASTATUS.TRANSFER, false);
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.TRANSFER, false);
         logger.info('Sync data transfer is already running');
         return;
       }
 
       // Đặt syncDataStatus là true để chỉ ra rằng quá trình sync đang chạy
-      await this.updateSyncStatus(SYNCDATASTATUS.TRANSFER, true, 0);
+      await HelperService.updateSyncStatus(SYNCDATASTATUS.TRANSFER, true, 0);
       while (hasMore) {
         const variables = {
           first,
@@ -124,13 +126,13 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         }
       }
       if (lastProcessedTimestamp > 0) {
-        await this.updateSyncStatus(
+        await HelperService.updateSyncStatus(
           SYNCDATASTATUS.TRANSFER,
           false,
           lastProcessedTimestamp,
         );
       } else {
-        await this.updateSyncStatus(SYNCDATASTATUS.TRANSFER, false);
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.TRANSFER, false);
       }
     } catch (error) {
       logger.error(
@@ -141,19 +143,21 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
 
   async handleSyncDataOrder() {
     try {
-      const lastItem = await this.getLastSyncedItem(SYNCDATASTATUS.ORDER);
+      const lastItem = await HelperService.getLastSyncedItem(
+        SYNCDATASTATUS.ORDER,
+      );
       let skip = 0;
       const first = 1000;
       let hasMore = true;
       let lastProcessedTimestamp = 0;
       if (lastItem && lastItem.syncDataStatus === true) {
-        await this.updateSyncStatus(SYNCDATASTATUS.ORDER, false);
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.ORDER, false);
         logger.info('Sync data Order is already running');
         return;
       }
 
       // Đặt syncDataStatus là true để chỉ ra rằng quá trình sync đang chạy
-      await this.updateSyncStatus(SYNCDATASTATUS.ORDER, true, 0);
+      await HelperService.updateSyncStatus(SYNCDATASTATUS.ORDER, true, 0);
 
       while (hasMore) {
         const variables = {
@@ -174,13 +178,13 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         }
       }
       if (lastProcessedTimestamp > 0) {
-        await this.updateSyncStatus(
+        await HelperService.updateSyncStatus(
           SYNCDATASTATUS.ORDER,
           false,
           lastProcessedTimestamp,
         );
       } else {
-        await this.updateSyncStatus(SYNCDATASTATUS.ORDER, false);
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.ORDER, false);
       }
       logger.info('Sync data Orders successful');
     } catch (error) {
@@ -497,43 +501,5 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
     } catch (error) {
       logger.error(`updateVolumeCollection: ${JSON.stringify(error)}`);
     }
-  }
-
-  async getLastSyncedItem(type: SYNCDATASTATUS) {
-    return await this.prisma.syncMasterData.findFirst({
-      where: {
-        type: type,
-      },
-      orderBy: {
-        timestamp: 'desc',
-      },
-    });
-  }
-
-  async updateSyncStatus(
-    contractType: string,
-    syncDataStatus: boolean,
-    timestamp = null,
-  ) {
-    const dataUpdate: Prisma.SyncMasterDataCreateInput = {
-      type: contractType,
-      syncDataStatus: syncDataStatus,
-    };
-    const dataCreate: Prisma.SyncMasterDataCreateInput = {
-      type: contractType,
-      syncDataStatus: syncDataStatus,
-    };
-    if (timestamp !== null && timestamp > 0) {
-      dataUpdate.timestamp = timestamp;
-    }
-    if (timestamp === 0) {
-      dataCreate.timestamp = 0;
-    }
-
-    await this.prisma.syncMasterData.upsert({
-      where: { type: contractType },
-      update: dataUpdate,
-      create: dataCreate,
-    });
   }
 }
