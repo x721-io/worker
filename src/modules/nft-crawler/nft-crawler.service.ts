@@ -41,7 +41,7 @@ export class NftCrawlerService {
 
       const collection = await this.prisma.collection.findUnique({
         where: {
-          address: collectionAddress,
+          address: collectionAddress.toLowerCase(),
         },
       });
 
