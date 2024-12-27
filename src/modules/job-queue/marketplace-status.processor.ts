@@ -22,6 +22,7 @@ import { parse } from 'path';
 import { ORDERTRANSFER, SYNCDATASTATUS } from 'src/constants/enums/Order.enum';
 import { CollectionsUtilsProcessor } from './collection-utils.processor';
 import HelperService from '../helper/helper.service';
+import helperService from '../helper/helper.service';
 export class UpdateOrderInput {
   sig: string;
   index: number;
@@ -434,7 +435,10 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         fromId: checkExists?.makerId,
         toId: userTaker ? userTaker.id : checkExists?.takerId,
         qtyMatch: input?.takeQty ? parseInt(input?.takeQty) : 0,
-        price: `${pricesPerItems * 10 ** 18}`,
+        price: helperService.convertPrice(
+          pricesPerItems,
+          checkExists.quoteToken,
+        ),
         priceNum: pricesPerItems,
         timestamp: Number(input.timestamp),
       };
