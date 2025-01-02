@@ -37,8 +37,10 @@ export class NftCrawlerService {
 
   async processNFTAsset(nft: NFTDataResponse) {
     try {
-      const { id, tokenId, collectionAddress, metadata } = nft;
-
+      if (!nft) {
+        return;
+      }
+      const { id, tokenId, collectionAddress, metadata } = nft || {};
       const collection = await this.prisma.collection.findUnique({
         where: {
           address: collectionAddress.toLowerCase(),
@@ -82,7 +84,7 @@ export class NftCrawlerService {
         },
       });
     } catch (error) {
-      logger.error(`Error processing NFT asset ${nft.id}:`, error);
+      logger.error(`Error processing NFT asset ${nft?.id}:`, error);
       throw error;
     }
   }
