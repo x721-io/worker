@@ -498,7 +498,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         },
         data: {
           vol: vol,
-          volumeWei: `${vol * 10 ** 18}`,
+          volumeWei: (BigInt(vol) * BigInt(10 ** 18)).toString(),
         },
       });
       logger.info(`Update Volume Collection Successfully`);
