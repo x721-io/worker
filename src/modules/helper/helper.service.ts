@@ -61,7 +61,7 @@ class HelperService {
 
   convertPrice(price, quoteToken) {
     const wu2u = process.env.QUOTE_TOKEN_WU2U?.toLowerCase();
-    const pusdt = process.env.QUOTE_TOKEN_PU2U?.toLowerCase();
+    const pusdt = process.env.QUOTE_TOKEN_PUSDT?.toLowerCase();
     const native = process.env.NATIVE_U2U?.toLowerCase();
 
     const multipliers = {
