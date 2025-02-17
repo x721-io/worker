@@ -1,6 +1,13 @@
 import { UserBalance } from './../../generated/Template1155/graphql';
 import { GraphQLClient } from 'graphql-request';
-import { OrderDirection, getSdk } from 'src/generated/graphql';
+import {
+  GetOffersQueryVariables,
+  GetOrdersQuery,
+  GetOrdersQueryVariables,
+  GetOrdersTransferQueryVariables,
+  OrderDirection,
+  getSdk,
+} from 'src/generated/graphql';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { QUEUE_NAME_MARKETPLACE_STATUS } from 'src/constants/Job.constant';
 import { Processor } from '@nestjs/bull';
@@ -43,6 +50,26 @@ export class UpdateOrderTransferInput {
   takeQty: string;
   status: ORDERTRANSFER;
 }
+export class Offer {
+  timestamp: string;
+  takeQty: string;
+  status: string;
+  sig: string;
+  nonce: string;
+  index: number;
+  id: string;
+  orderType: string;
+  filledQty: string;
+  tokenId: string;
+  maker: User;
+  taker: User;
+}
+
+export class User {
+  onSaleCount: string;
+  id: string;
+  holdingCount: string;
+}
 
 @Processor(QUEUE_NAME_MARKETPLACE_STATUS)
 export class MarketplaceStatusProcessor implements OnModuleInit {
@@ -61,14 +88,20 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   private sdk = getSdk(this.client);
 
   async onModuleInit() {
-    logger.info(`call First time QUEUE_NAME_MARKETPLACE_STATUS`); // Run the task once immediately upon service start
-    // await this.handleSyncMarketPlaceStatus();
-    await this.handleSyncDataOrder();
-    await this.handleSyncDataOrderTransfer();
+    try {
+      logger.info(`call First time QUEUE_NAME_MARKETPLACE_STATUS`); // Run the task once immediately upon service start
+      await Promise.all([
+        this.handleSyncDataOrder(),
+        this.handleSyncDataOrderTransfer(),
+        this.handleSyncDataOffer(),
+      ]);
+    } catch (error) {
+      logger.error(`Error in syncing data: ${error.message}`);
+    }
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
-  async callEach10SecondSyncDataOrrders() {
+  async callEach5SecondSyncDataOrrders() {
     try {
       logger.info(`call per 5 seconds`); // Run the task once immediately upon service start
       await this.handleSyncDataOrder();
@@ -78,12 +111,22 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
   }
 
   @Cron(CronExpression.EVERY_5_SECONDS)
-  async callEach10SecondSyncDataOrrdersTransfer() {
+  async callEach5SecondSyncDataOrdersTransfer() {
     try {
       logger.info(`call per 5 seconds`); // Run the task once immediately upon service start
       await this.handleSyncDataOrderTransfer();
     } catch (error) {
       logger.error(`Sync data Orders Fail 5 seconds: ${JSON.stringify(error)}`);
+    }
+  }
+
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async callEach5SecondSyncDataOffers() {
+    try {
+      logger.info(`call per 5 seconds`); // Run the task once immediately upon service start
+      await this.handleSyncDataOffer();
+    } catch (error) {
+      logger.error(`Sync data Offers Fail 5 seconds: ${JSON.stringify(error)}`);
     }
   }
 
@@ -105,7 +148,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       // Đặt syncDataStatus là true để chỉ ra rằng quá trình sync đang chạy
       await HelperService.updateSyncStatus(SYNCDATASTATUS.TRANSFER, true, 0);
       while (hasMore) {
-        const variables = {
+        const variables: GetOrdersTransferQueryVariables = {
           first,
           skip,
           orderDirection: OrderDirection.Asc,
@@ -161,7 +204,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       await HelperService.updateSyncStatus(SYNCDATASTATUS.ORDER, true, 0);
 
       while (hasMore) {
-        const variables = {
+        const variables: GetOrdersQueryVariables = {
           first,
           skip,
           orderDirection: OrderDirection.Asc,
@@ -435,7 +478,7 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
         fromId: checkExists?.makerId,
         toId: userTaker ? userTaker.id : checkExists?.takerId,
         qtyMatch: input?.takeQty ? parseInt(input?.takeQty) : 0,
-        price: helperService.convertPrice(
+        price: helperService.etherToWeiQuoteToken(
           pricesPerItems,
           checkExists.quoteToken,
         ),
@@ -504,6 +547,180 @@ export class MarketplaceStatusProcessor implements OnModuleInit {
       logger.info(`Update Volume Collection Successfully`);
     } catch (error) {
       logger.error(`updateVolumeCollection: ${JSON.stringify(error)}`);
+    }
+  }
+
+  async handleSyncDataOffer() {
+    try {
+      const lastItem = await HelperService.getLastSyncedItem(
+        SYNCDATASTATUS.OFFER,
+      );
+      let skip = 0;
+      const first = 1000;
+      let hasMore = true;
+      let lastProcessedTimestamp = 0;
+      if (lastItem && lastItem.syncDataStatus === true) {
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.OFFER, false);
+        logger.info('Sync data offer is already running');
+        return;
+      }
+
+      // // Đặt syncDataStatus là true để chỉ ra rằng quá trình sync đang chạy
+      await HelperService.updateSyncStatus(SYNCDATASTATUS.OFFER, true, 0);
+      while (hasMore) {
+        const variables: GetOffersQueryVariables = {
+          first,
+          skip,
+          orderDirection: OrderDirection.Asc,
+          timestamp: lastItem?.timestamp || 0,
+          orderType: 'BID_COLLECTION',
+        };
+        const response = await this.sdk.GetOrders(variables);
+        if (response && response.orders && response.orders.length > 0) {
+          await this.processOffers(response.orders);
+          const lastTimeStamp = response.orders.pop();
+          lastProcessedTimestamp = parseInt(lastTimeStamp?.timestamp);
+          skip += first;
+        } else {
+          hasMore = false;
+        }
+      }
+      if (lastProcessedTimestamp > 0) {
+        await HelperService.updateSyncStatus(
+          SYNCDATASTATUS.OFFER,
+          false,
+          lastProcessedTimestamp,
+        );
+      } else {
+        await HelperService.updateSyncStatus(SYNCDATASTATUS.OFFER, false);
+      }
+      logger.info(`Update Bid Collection Successfully`);
+    } catch (error) {
+      logger.error(`handleSync DataOrder: ${JSON.stringify(error)}`);
+    }
+  }
+
+  async processOffers(events) {
+    Promise.allSettled(
+      events.map(async (item: Offer) => {
+        if (item?.sig && item?.index && item?.tokenId) {
+          await this.createOrderOffer(item);
+        }
+      }),
+    );
+  }
+
+  async createOrderOffer(input: Offer) {
+    try {
+      const {
+        sig,
+        index,
+        filledQty,
+        tokenId,
+        taker,
+        takeQty,
+        nonce,
+        timestamp,
+      } = input;
+
+      const offerInfor = await this.prisma.offer.findUnique({
+        where: { sig_index: { sig, index } },
+      });
+      if (!offerInfor) return;
+
+      const nft = await this.prisma.nFT.findFirst({
+        where: {
+          OR: [
+            { id: tokenId, collectionId: offerInfor.collectionId },
+            { u2uId: tokenId, collectionId: offerInfor.collectionId },
+          ],
+        },
+      });
+      if (!nft) return;
+
+      const userTaker = taker?.id
+        ? await this.fetchOrCreateUser(taker.id)
+        : null;
+      if (!userTaker) return;
+
+      const orderExists = await this.prisma.order.findUnique({
+        where: { sig_index: { sig, index: Number(filledQty) } },
+      });
+      if (orderExists) return;
+
+      const dataOrder: Prisma.OrderUncheckedCreateInput = {
+        sig,
+        idxOffer: offerInfor.index,
+        makerId: offerInfor.makerId,
+        makeAssetType: offerInfor.makeAssetType,
+        makeAssetAddress: offerInfor.makeAssetAddress,
+        makeAssetValue: offerInfor.makeAssetValue,
+        makeAssetId: offerInfor.makeAssetId,
+        takerId: userTaker.id,
+        takeAssetType: offerInfor.takeAssetType,
+        takeAssetAddress: offerInfor.takeAssetAddress,
+        takeAssetValue: offerInfor.takeAssetValue,
+        takeAssetId: nft.u2uId || nft.id,
+        salt: offerInfor.salt,
+        start: offerInfor.start,
+        end: offerInfor.end,
+        orderType: ORDERTYPE.BID_COLLECTION,
+        orderStatus: ORDERSTATUS.FILLED,
+        tokenId: nft.id,
+        collectionId: offerInfor.collectionId,
+        price: offerInfor.price,
+        quantity: parseInt(`${takeQty || 0}`),
+        priceNum: offerInfor.priceNum,
+        netPrice: offerInfor.netPrice,
+        netPriceNum: offerInfor.netPriceNum,
+        quoteToken: offerInfor.quoteToken,
+        index: parseInt(`${filledQty}`),
+        proof: offerInfor.proof,
+        root: offerInfor.root,
+        filledQty: parseInt(`${takeQty || 0}`),
+      };
+
+      const resultOrder = await this.prisma.order.create({ data: dataOrder });
+      if (!resultOrder) return;
+
+      await this.updateVolumeCollection(
+        resultOrder.collectionId,
+        resultOrder.priceNum,
+        parseInt(`${takeQty || 0}`),
+      );
+
+      const historyExists = await this.prisma.orderHistory.findFirst({
+        where: { sig, index: parseInt(`${filledQty}`), nonce },
+      });
+      if (!historyExists) {
+        await this.prisma.orderHistory.create({
+          data: {
+            sig,
+            index,
+            nonce,
+            fromId: resultOrder.makerId,
+            toId: userTaker.id,
+            qtyMatch: parseInt(`${takeQty || 0}`),
+            price: offerInfor.price,
+            timestamp: Number(timestamp),
+          },
+        });
+      }
+
+      await this.prisma.offer.update({
+        where: { sig_index: { sig: offerInfor.sig, index: offerInfor.index } },
+        data: { filledQty: parseInt(filledQty) },
+      });
+      if (parseInt(filledQty) === offerInfor.quantity) {
+        await this.prisma.offer.update({
+          where: {
+            sig_index: { sig: offerInfor.sig, index: offerInfor.index },
+          },
+          data: { offerStatus: ORDERSTATUS.FILLED },
+        });
+      }
+    } catch (error) {
+      logger.error(`Create Order Offer: ${JSON.stringify(error)}`);
     }
   }
 }
