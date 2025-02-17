@@ -107,7 +107,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
     }
   }
 
-  // @Cron(CronExpression.EVERY_10_SECONDS)
+  @Cron(CronExpression.EVERY_10_SECONDS)
   async handleSyncCollectionExtend() {
     try {
       const collectionExtend = await this.getCollectionsToExtend();
@@ -195,7 +195,7 @@ export class CollectionsUtilsProcessor implements OnModuleInit {
       logger.error(`handleSyncCollectionExtend: ${error}`);
     }
   }
-  // @Cron(CronExpression.EVERY_2_HOURS)
+  @Cron(CronExpression.EVERY_2_HOURS)
   async handleSyncFloorPrice() {
     try {
       const batchSize = 100;

@@ -74,6 +74,7 @@ query GetMarketplaceStatus1155($first: Int!, $skip: Int! , $orderDirection: Orde
   }
 }
 
+
 query GetOrders($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt! = 0) {
   orders(
     first: $first
@@ -93,6 +94,8 @@ query GetOrders($first: Int!, $skip: Int! , $orderDirection: OrderDirection = de
     index
     id
     filledQty
+    orderType
+    tokenId
     maker {
       onSaleCount
       id
@@ -116,7 +119,6 @@ query GetOrdersTransfer($first: Int!, $skip: Int! , $orderDirection: OrderDirect
     where: {
       timestamp_gt: $timestamp
       status_in: [TRANSFER]
-      maker : "0x51d34e009e5315263120347f038962b681a6e84b"
   	}
   ) {
     tokenId
@@ -129,6 +131,39 @@ query GetOrdersTransfer($first: Int!, $skip: Int! , $orderDirection: OrderDirect
     maker {
       id
       onSaleCount
+      holdingCount
+    }
+    taker {
+      onSaleCount
+      id
+      holdingCount
+    }
+  }
+}
+
+query GetOffers($first: Int!, $skip: Int! , $orderDirection: OrderDirection = desc, $timestamp: BigInt! = 0, $orderType: String) {
+  orders(
+    first: $first
+    skip: $skip
+    orderBy: timestamp
+    orderDirection: $orderDirection
+    where: {
+      timestamp_gt: $timestamp
+      orderType: $orderType
+  	}
+  ) {
+    timestamp
+    takeQty
+    status
+    sig
+    nonce
+    index
+    id
+    filledQty
+    orderType
+    maker {
+      onSaleCount
+      id
       holdingCount
     }
     taker {
